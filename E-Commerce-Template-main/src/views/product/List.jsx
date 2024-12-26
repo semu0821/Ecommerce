@@ -1,5 +1,6 @@
 import React, { lazy, Component } from "react";
 import { data } from "../../data";
+
 const Paging = lazy(() => import("../../components/Paging"));
 const Breadcrumb = lazy(() => import("../../components/Breadcrumb"));
 const FilterCategory = lazy(() => import("../../components/filter/Category"));
@@ -10,12 +11,8 @@ const FilterColor = lazy(() => import("../../components/filter/Color"));
 const FilterTag = lazy(() => import("../../components/filter/Tag"));
 const FilterClear = lazy(() => import("../../components/filter/Clear"));
 const CardServices = lazy(() => import("../../components/card/CardServices"));
-const CardProductGrid = lazy(() =>
-  import("../../components/card/CardProductGrid")
-);
-const CardProductList = lazy(() =>
-  import("../../components/card/CardProductList")
-);
+const CardProductGrid = lazy(() => import("../../components/card/CardProductGrid"));
+const CardProductList = lazy(() => import("../../components/card/CardProductList"));
 
 class ProductListView extends Component {
   state = {
@@ -24,32 +21,55 @@ class ProductListView extends Component {
     totalPages: null,
     totalItems: 0,
     view: "list",
+    priceFilter: [], // Add priceFilter state
   };
 
   UNSAFE_componentWillMount() {
-    const totalItems = this.getProducts().length;
-    this.setState({ totalItems });
+    this.applyFilters(); // Update to apply filters initially
   }
 
   onPageChanged = (page) => {
     let products = this.getProducts();
-    const { currentPage, totalPages, pageLimit } = page;
+    const { currentPage, pageLimit } = page;
     const offset = (currentPage - 1) * pageLimit;
     const currentProducts = products.slice(offset, offset + pageLimit);
-    this.setState({ currentPage, currentProducts, totalPages });
+    this.setState({ currentPage, currentProducts });
   };
 
   onChangeView = (view) => {
     this.setState({ view });
   };
 
+  onPriceFilterChange = (selectedRanges) => {
+    this.setState({ priceFilter: selectedRanges }, this.applyFilters);
+  };
+
+  applyFilters = () => {
+    const products = this.getProducts();
+    const totalItems = products.length;
+
+    this.setState({
+      totalItems,
+      currentProducts: products.slice(0, 9), // Show first 9 products by default
+      currentPage: 1, // Reset to first page on filter change
+    });
+  };
+
   getProducts = () => {
     let products = data.products;
-    products = products.concat(products);
-    products = products.concat(products);
-    products = products.concat(products);
-    products = products.concat(products);
-    products = products.concat(products);
+
+    // Apply price filter if it exists
+    if (this.state.priceFilter.length > 0) {
+      products = products.filter(product =>
+        this.state.priceFilter.some(range =>
+          product.price >= range[0] && product.price <= range[1]
+        )
+      );
+    }
+
+    // Duplicate products for pagination
+    products = products.concat(products).concat(products).concat(products).concat(products);
+
     return products;
   };
 
@@ -73,7 +93,7 @@ class ProductListView extends Component {
           <div className="row">
             <div className="col-md-3">
               <FilterCategory />
-              <FilterPrice />
+              <FilterPrice onChange={this.onPriceFilterChange} /> {/* Update this line */}
               <FilterSize />
               <FilterStar />
               <FilterColor />
@@ -98,7 +118,7 @@ class ProductListView extends Component {
                     <option value={2}>Latest items</option>
                     <option value={3}>Trending</option>
                     <option value={4}>Price low to high</option>
-                    <option value={4}>Price high to low</option>
+                    <option value={5}>Price high to low</option>
                   </select>
                   <div className="btn-group ms-3" role="group">
                     <button
@@ -131,21 +151,17 @@ class ProductListView extends Component {
               <hr />
               <div className="row g-3">
                 {this.state.view === "grid" &&
-                  this.state.currentProducts.map((product, idx) => {
-                    return (
-                      <div key={idx} className="col-md-4">
-                        <CardProductGrid data={product} />
-                      </div>
-                    );
-                  })}
+                  this.state.currentProducts.map((product, idx) => (
+                    <div key={idx} className="col-md-4">
+                      <CardProductGrid data={product} />
+                    </div>
+                  ))}
                 {this.state.view === "list" &&
-                  this.state.currentProducts.map((product, idx) => {
-                    return (
-                      <div key={idx} className="col-md-12">
-                        <CardProductList data={product} />
-                      </div>
-                    );
-                  })}
+                  this.state.currentProducts.map((product, idx) => (
+                    <div key={idx} className="col-md-12">
+                      <CardProductList data={product} />
+                    </div>
+                  ))}
               </div>
               <hr />
               <Paging
