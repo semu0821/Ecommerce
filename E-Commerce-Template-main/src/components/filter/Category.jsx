@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-const FilterCategory = (props) => {
+const FilterCategory = ({ onCategoryFilterChange }) => {
   return (
     <div className="card mb-3 accordion">
       <div
@@ -18,34 +18,52 @@ const FilterCategory = (props) => {
         id="filterCategory"
       >
         <li className="list-group-item">
-          <Link to="/" className="text-decoration-none stretched-link">
+          <button
+            onClick={() => onCategoryFilterChange("Clothing")}
+            className="text-decoration-none stretched-link"
+          >
             Clothing
-          </Link>
+          </button>
         </li>
         <li className="list-group-item">
-          <Link to="/" className="text-decoration-none stretched-link">
+          <button
+            onClick={() => onCategoryFilterChange("Leather Bag")}
+            className="text-decoration-none stretched-link"
+          >
             Leather Bag
-          </Link>
+          </button>
         </li>
         <li className="list-group-item">
-          <Link to="/" className="text-decoration-none stretched-link">
-            Trausers
-          </Link>
+          <button
+            onClick={() => onCategoryFilterChange("Trousers")}
+            className="text-decoration-none stretched-link"
+          >
+            Trousers
+          </button>
         </li>
         <li className="list-group-item">
-          <Link to="/" className="text-decoration-none stretched-link">
+          <button
+            onClick={() => onCategoryFilterChange("Sweater & Cardigans")}
+            className="text-decoration-none stretched-link"
+          >
             Sweater & Cardigans
-          </Link>
+          </button>
         </li>
         <li className="list-group-item">
-          <Link to="/" className="text-decoration-none stretched-link">
+          <button
+            onClick={() => onCategoryFilterChange("High Heels")}
+            className="text-decoration-none stretched-link"
+          >
             High Heels
-          </Link>
+          </button>
         </li>
         <li className="list-group-item">
-          <Link to="/" className="text-decoration-none stretched-link">
+          <button
+            onClick={() => onCategoryFilterChange("Coats & Jackets")}
+            className="text-decoration-none stretched-link"
+          >
             Coats & Jackets
-          </Link>
+          </button>
         </li>
       </ul>
     </div>
