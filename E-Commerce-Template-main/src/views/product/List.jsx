@@ -21,7 +21,8 @@ class ProductListView extends Component {
     totalPages: null,
     totalItems: 0,
     view: "list",
-    priceFilter: [], // Add priceFilter state
+    priceFilter: [],
+    selectedCategory: "", // Add selectedCategory state
   };
 
   UNSAFE_componentWillMount() {
@@ -44,8 +45,20 @@ class ProductListView extends Component {
     this.setState({ priceFilter: selectedRanges }, this.applyFilters);
   };
 
+  onCategoryFilterChange = (category) => {
+    this.setState({ selectedCategory: category }, this.applyFilters); // Update selectedCategory and apply filters
+  };
+
   applyFilters = () => {
-    const products = this.getProducts();
+    let products = this.getProducts();
+    
+    // Filter by category if selectedCategory exists
+    if (this.state.selectedCategory) {
+      products = products.filter(product =>
+        product.category.toLowerCase() === this.state.selectedCategory.toLowerCase()
+      );
+    }
+
     const totalItems = products.length;
 
     this.setState({
@@ -92,8 +105,8 @@ class ProductListView extends Component {
         <div className="container-fluid mb-3">
           <div className="row">
             <div className="col-md-3">
-              <FilterCategory />
-              <FilterPrice onChange={this.onPriceFilterChange} /> {/* Update this line */}
+              <FilterCategory onCategoryFilterChange={this.onCategoryFilterChange} /> {/* Pass handler */}
+              <FilterPrice onChange={this.onPriceFilterChange} />
               <FilterSize />
               <FilterStar />
               <FilterColor />
