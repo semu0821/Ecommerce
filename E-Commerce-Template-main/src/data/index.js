@@ -102,6 +102,8 @@ export const data = {
       isFreeShipping: true,
       description:
         "Nulla sodales sit amet orci eu vehicula. Curabitur metus velit, fermentum a velit ac, sodales egestas lacus. Etiam congue velit vel luctus dictum. Pellentesque at pellentesque sapien.",
+        category:"Clothing",
+
     },
     {
       id: 2,
@@ -119,6 +121,7 @@ export const data = {
       isFreeShipping: true,
       description:
         "Maecenas suscipit volutpat gravida. Nulla hendrerit nisi a lectus blandit aliquam. Integer enim magna, consequat sed justo nec, auctor sagittis urna.",
+        category:"Clothing",
     },
     {
       id: 3,
@@ -136,6 +139,8 @@ export const data = {
       isFreeShipping: true,
       description:
         "Vivamus sapien eros, molestie sed lacus vitae, lacinia volutpat ipsum. Nam sollicitudin lorem eget ornare vulputate.",
+        category:"Leather Bag",
+
     },
     {
       id: 4,
@@ -153,6 +158,8 @@ export const data = {
       isFreeShipping: false,
       description:
         "Morbi lobortis velit non consectetur porta.|Duis auctor risus ac purus vehicula tempor.|Fusce at ipsum a leo tempor malesuada.|Curabitur tincidunt justo vel volutpat suscipit.",
+        category:"Leather Bag",
+
     },
   ],
   blogBanner: [

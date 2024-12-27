@@ -64,7 +64,8 @@ class ProductListView extends Component {
     }
 
     if (this.state.selectedRating) {
-      products = products.filter((product) => product.rating >= this.state.selectedRating);
+      console.log(products)
+      products = products.filter((product) => product.star >= this.state.selectedRating);
     }
 
     const totalItems = products.length;
