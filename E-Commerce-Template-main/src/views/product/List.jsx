@@ -22,11 +22,12 @@ class ProductListView extends Component {
     totalItems: 0,
     view: "list",
     priceFilter: [],
-    selectedCategory: "", // Add selectedCategory state
+    selectedCategory: "",
+    selectedRating: null, // Added state for selected rating
   };
 
   UNSAFE_componentWillMount() {
-    this.applyFilters(); // Update to apply filters initially
+    this.applyFilters();
   }
 
   onPageChanged = (page) => {
@@ -46,42 +47,47 @@ class ProductListView extends Component {
   };
 
   onCategoryFilterChange = (category) => {
-    this.setState({ selectedCategory: category }, this.applyFilters); // Update selectedCategory and apply filters
+    this.setState({ selectedCategory: category }, this.applyFilters);
+  };
+
+  onRatingFilterChange = (rating) => {
+    this.setState({ selectedRating: rating }, this.applyFilters); // Update selectedRating and apply filters
   };
 
   applyFilters = () => {
     let products = this.getProducts();
-    
-    // Filter by category if selectedCategory exists
+
     if (this.state.selectedCategory) {
-      products = products.filter(product =>
+      products = products.filter((product) =>
         product.category.toLowerCase() === this.state.selectedCategory.toLowerCase()
       );
+    }
+
+    if (this.state.selectedRating) {
+      products = products.filter((product) => product.rating >= this.state.selectedRating);
     }
 
     const totalItems = products.length;
 
     this.setState({
       totalItems,
-      currentProducts: products.slice(0, 9), // Show first 9 products by default
-      currentPage: 1, // Reset to first page on filter change
+      currentProducts: products.slice(0, 9),
+      currentPage: 1,
     });
   };
 
   getProducts = () => {
     let products = data.products;
 
-    // Apply price filter if it exists
     if (this.state.priceFilter.length > 0) {
-      products = products.filter(product =>
-        this.state.priceFilter.some(range =>
-          product.price >= range[0] && product.price <= range[1]
+      products = products.filter((product) =>
+        this.state.priceFilter.some(
+          (range) => product.price >= range[0] && product.price <= range[1]
         )
       );
     }
 
-    // Duplicate products for pagination
-    products = products.concat(products).concat(products).concat(products).concat(products);
+    products = products.concat(products).concat(products).concat(products);
 
     return products;
   };
@@ -91,9 +97,7 @@ class ProductListView extends Component {
       <React.Fragment>
         <div
           className="p-5 bg-primary bs-cover"
-          style={{
-            backgroundImage: "url(../../images/banner/50-Banner.webp)",
-          }}
+          style={{ backgroundImage: "url(../../images/banner/50-Banner.webp)" }}
         >
           <div className="container text-center">
             <span className="display-5 px-3 bg-white rounded shadow">
@@ -105,10 +109,10 @@ class ProductListView extends Component {
         <div className="container-fluid mb-3">
           <div className="row">
             <div className="col-md-3">
-              <FilterCategory onCategoryFilterChange={this.onCategoryFilterChange} /> {/* Pass handler */}
+              <FilterCategory onCategoryFilterChange={this.onCategoryFilterChange} />
               <FilterPrice onChange={this.onPriceFilterChange} />
+              <FilterStar onRatingFilterChange={this.onRatingFilterChange} />
               <FilterSize />
-              <FilterStar />
               <FilterColor />
               <FilterClear />
               <FilterTag />
