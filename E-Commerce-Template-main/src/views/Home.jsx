@@ -1,150 +1,90 @@
-import React, { lazy, Component } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
-import { data } from "../data";
-import { ReactComponent as IconLaptop } from "bootstrap-icons/icons/laptop.svg";
-import { ReactComponent as IconHeadset } from "bootstrap-icons/icons/headset.svg";
-import { ReactComponent as IconPhone } from "bootstrap-icons/icons/phone.svg";
-import { ReactComponent as IconTv } from "bootstrap-icons/icons/tv.svg";
-import { ReactComponent as IconDisplay } from "bootstrap-icons/icons/display.svg";
-import { ReactComponent as IconHdd } from "bootstrap-icons/icons/hdd.svg";
-import { ReactComponent as IconUpcScan } from "bootstrap-icons/icons/upc-scan.svg";
-import { ReactComponent as IconTools } from "bootstrap-icons/icons/tools.svg";
 
-const Support = lazy(() => import("../components/Support"));
-const Banner = lazy(() => import("../components/carousel/Banner"));
-const Carousel = lazy(() => import("../components/carousel/Carousel"));
-const CardIcon = lazy(() => import("../components/card/CardIcon"));
-const CardLogin = lazy(() => import("../components/card/CardLogin"));
-const CardImage = lazy(() => import("../components/card/CardImage"));
-const CardDealsOfTheDay = lazy(() =>
-  import("../components/card/CardDealsOfTheDay")
-);
-
-class HomeView extends Component {
-  components = {
-    IconLaptop: IconLaptop,
-    IconHeadset: IconHeadset,
-    IconPhone: IconPhone,
-    IconTv: IconTv,
-    IconDisplay: IconDisplay,
-    IconHdd: IconHdd,
-    IconUpcScan: IconUpcScan,
-    IconTools: IconTools,
-  };
-
-  render() {
-    const iconProducts = data.iconProducts;
-    const rows = [...Array(Math.ceil(iconProducts.length / 4))];
-    // chunk the products into the array of rows
-    const productRows = rows.map((row, idx) =>
-      iconProducts.slice(idx * 4, idx * 4 + 4)
-    );
-    // map the rows as div.row
-    const carouselContent = productRows.map((row, idx) => (
-      <div className={`carousel-item ${idx === 0 ? "active" : ""}`} key={idx}>
-        <div className="row g-3">
-          {row.map((product, idx) => {
-            const ProductImage = this.components[product.img];
-            return (
-              <div key={idx} className="col-md-3">
-                <CardIcon
-                  title={product.title}
-                  text={product.text}
-                  tips={product.tips}
-                  to={product.to}
-                >
-                  <ProductImage className={product.cssClass} width="80" height="80" />
-                </CardIcon>
+const HomePage = () => {
+  return (
+    <div>
+      <div className="container mt-4">
+        <div className="row">
+          {/* Clothing Frame */}
+          <div className="col-md-3">
+            <div className="card text-center shadow-lg" style={{ maxWidth: "250px", margin: "auto" }}>
+              <img
+                src="/images/banner/clothing.jpg" // Static image in the public folder
+                className="card-img-top"
+                alt="Clothing"
+                style={{ height: "150px", objectFit: "cover" }}
+              />
+              <div className="card-body">
+                <h5 className="card-title">Clothing</h5>
+                <p className="card-text">Explore a wide range of clothing for all occasions.</p>
+                <Link to="/category/clothing" className="btn btn-primary">
+                  Shop Clothing
+                </Link>
               </div>
-            );
-          })}
+            </div>
+          </div>
+
+          {/* Accessories Frame */}
+          <div className="col-md-3">
+            <div className="card text-center shadow-lg" style={{ maxWidth: "250px", margin: "auto" }}>
+              <img
+                src="/images/banner/accessory.jpg" // Static image in the public folder
+                className="card-img-top"
+                alt="Accessories"
+                style={{ height: "150px", objectFit: "cover" }}
+              />
+              <div className="card-body">
+                <h5 className="card-title">Accessories</h5>
+                <p className="card-text">Discover accessories to complement your style.</p>
+                <Link to="/category/accessories" className="btn btn-primary">
+                  Shop Accessories
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Home Materials Frame */}
+          <div className="col-md-3">
+            <div className="card text-center shadow-lg" style={{ maxWidth: "250px", margin: "auto" }}>
+              <img
+                src="/images/banner/mejlis.jpg" // Static image in the public folder
+                className="card-img-top"
+                alt="Home Materials"
+                style={{ height: "150px", objectFit: "cover" }}
+              />
+              <div className="card-body">
+                <h5 className="card-title">Home Materials</h5>
+                <p className="card-text">Upgrade your home with top-quality materials.</p>
+                <Link to="/category/home-materials" className="btn btn-primary">
+                  Shop Home Materials
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Car Accessories Frame */}
+          <div className="col-md-3">
+            <div className="card text-center shadow-lg" style={{ maxWidth: "250px", margin: "auto" }}>
+              <img
+                src="/images/banner/car.jpg" // Static image in the public folder
+                className="card-img-top"
+                alt="Car Accessories"
+                style={{ height: "150px", objectFit: "cover" }}
+              />
+              <div className="card-body">
+                <h5 className="card-title">Car Accessories</h5>
+                <p className="card-text">Find the best accessories for your car.</p>
+                <Link to="/category/car-accessories" className="btn btn-primary">
+                  Shop Car Accessories
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    ));
+    </div>
+  );
+};
 
-    return (
-      <React.Fragment>
-        <Banner className="mb-3" id="carouselHomeBanner" data={data.banner} />
-        <div className="container-fluid bg-light mb-3">
-          <div className="row g-3">
-            <div className="col-md-9">
-              <Carousel id="elect-product-category" className="mb-3">
-                {carouselContent}
-              </Carousel>
-              <Support />
-            </div>
-            <div className="col-md-3">
-              <CardLogin className="mb-3" />
-              <CardImage src="../../images/banner/Watches.webp" to="promo" />
-            </div>
-          </div>
-        </div>
-        <div className="container-fluid bg-light mb-3">
-          <div className="row">
-            <div className="col-md-12">
-              <CardDealsOfTheDay
-                endDate={Date.now() + 1000 * 60 * 60 * 14}
-                title="Deals of the Day"
-                to="/"
-              >
-                <Carousel id="elect-product-category1">
-                  {carouselContent}
-                </Carousel>
-              </CardDealsOfTheDay>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-info bg-gradient p-3 text-center mb-3">
-          <h4 className="m-0">Explore Fashion Collection</h4>
-        </div>
-        <div className="container">
-          <div className="row">
-            <div className="col-md-3">
-              <Link to="/" className="text-decoration-none">
-                <img
-                  src="../../images/category/male.webp"
-                  className="img-fluid rounded-circle"
-                  alt="..."
-                />
-                <div className="text-center h6">Men's Clothing</div>
-              </Link>
-            </div>
-            <div className="col-md-3">
-              <Link to="/" className="text-decoration-none">
-                <img
-                  src="../../images/category/female.webp"
-                  className="img-fluid rounded-circle"
-                  alt="..."
-                />
-                <div className="text-center h6">Women's Clothing</div>
-              </Link>
-            </div>
-            <div className="col-md-3">
-              <Link to="/" className="text-decoration-none">
-                <img
-                  src="../../images/category/smartwatch.webp"
-                  className="img-fluid rounded-circle"
-                  alt="..."
-                />
-                <div className="text-center h6">Smartwatch</div>
-              </Link>
-            </div>
-            <div className="col-md-3">
-              <Link to="/" className="text-decoration-none">
-                <img
-                  src="../../images/category/footwear.webp"
-                  className="img-fluid rounded-circle"
-                  alt="..."
-                />
-                <div className="text-center h6">Footwear</div>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </React.Fragment>
-    );
-  }
-}
-
-export default HomeView;
+export default HomePage;
