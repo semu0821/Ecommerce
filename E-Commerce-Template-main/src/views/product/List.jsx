@@ -1,4 +1,4 @@
-import React, { lazy, Component } from "react";
+import React, { Component, lazy } from "react";
 import { data } from "../../data";
 
 const Paging = lazy(() => import("../../components/Paging"));
@@ -8,9 +8,7 @@ const FilterPrice = lazy(() => import("../../components/filter/Price"));
 const FilterSize = lazy(() => import("../../components/filter/Size"));
 const FilterStar = lazy(() => import("../../components/filter/Star"));
 const FilterColor = lazy(() => import("../../components/filter/Color"));
-const FilterTag = lazy(() => import("../../components/filter/Tag"));
 const FilterClear = lazy(() => import("../../components/filter/Clear"));
-const CardServices = lazy(() => import("../../components/card/CardServices"));
 const CardProductGrid = lazy(() => import("../../components/card/CardProductGrid"));
 const CardProductList = lazy(() => import("../../components/card/CardProductList"));
 
@@ -23,7 +21,9 @@ class ProductListView extends Component {
     view: "list",
     priceFilter: [],
     selectedCategory: "",
-    selectedRating: null, // Added state for selected rating
+    selectedRating: null,
+    selectedSizes: [],
+    selectedColors: [],  // Added state for color filters
   };
 
   UNSAFE_componentWillMount() {
@@ -51,21 +51,55 @@ class ProductListView extends Component {
   };
 
   onRatingFilterChange = (rating) => {
-    this.setState({ selectedRating: rating }, this.applyFilters); // Update selectedRating and apply filters
+    this.setState({ selectedRating: rating }, this.applyFilters);
+  };
+
+  onSizeFilterChange = (selectedSizes) => {
+    this.setState({ selectedSizes }, this.applyFilters);
+  };
+
+  onColorFilterChange = (selectedColors) => {
+    this.setState({ selectedColors }, this.applyFilters);
+  };
+
+  onClearFilters = () => {
+    // Reset all filter states to their initial values
+    this.setState(
+      {
+        priceFilter: [],
+        selectedCategory: "",
+        selectedRating: null,
+        selectedSizes: [],
+        selectedColors: [],
+      },
+      this.applyFilters  // Apply the filters after reset
+    );
   };
 
   applyFilters = () => {
     let products = this.getProducts();
 
     if (this.state.selectedCategory) {
-      products = products.filter((product) =>
-        product.category.toLowerCase() === this.state.selectedCategory.toLowerCase()
+      products = products.filter(
+        (product) =>
+          product.category.toLowerCase() === this.state.selectedCategory.toLowerCase()
       );
     }
 
     if (this.state.selectedRating) {
-      console.log(products)
       products = products.filter((product) => product.star >= this.state.selectedRating);
+    }
+
+    if (this.state.selectedSizes.length > 0) {
+      products = products.filter((product) =>
+        this.state.selectedSizes.includes(product.size)
+      );
+    }
+
+    if (this.state.selectedColors.length > 0) {
+      products = products.filter((product) =>
+        this.state.selectedColors.includes(product.color.toLowerCase())  // Assuming product color is stored as a string
+      );
     }
 
     const totalItems = products.length;
@@ -88,7 +122,7 @@ class ProductListView extends Component {
       );
     }
 
-    products = products.concat(products).concat(products).concat(products);
+    products = products.concat(products).concat(products).concat(products);  // Repeat the products (as per original logic)
 
     return products;
   };
@@ -96,16 +130,6 @@ class ProductListView extends Component {
   render() {
     return (
       <React.Fragment>
-        <div
-          className="p-5 bg-primary bs-cover"
-          style={{ backgroundImage: "url(../../images/banner/50-Banner.webp)" }}
-        >
-          <div className="container text-center">
-            <span className="display-5 px-3 bg-white rounded shadow">
-              T-Shirts
-            </span>
-          </div>
-        </div>
         <Breadcrumb />
         <div className="container-fluid mb-3">
           <div className="row">
@@ -113,18 +137,18 @@ class ProductListView extends Component {
               <FilterCategory onCategoryFilterChange={this.onCategoryFilterChange} />
               <FilterPrice onChange={this.onPriceFilterChange} />
               <FilterStar onRatingFilterChange={this.onRatingFilterChange} />
-              <FilterSize />
-              <FilterColor />
-              <FilterClear />
-              <FilterTag />
-              <CardServices />
+              <FilterSize onSizeFilterChange={this.onSizeFilterChange} />
+              <FilterColor
+                selectedColors={this.state.selectedColors}
+                onColorFilterChange={this.onColorFilterChange}
+              />
+              <FilterClear onClearFilters={this.onClearFilters} />
             </div>
             <div className="col-md-9">
               <div className="row">
                 <div className="col-7">
                   <span className="align-middle fw-bold">
-                    {this.state.totalItems} results for{" "}
-                    <span className="text-warning">"t-shirts"</span>
+                    {this.state.totalItems} results found
                   </span>
                 </div>
                 <div className="col-5 d-flex justify-content-end">
@@ -140,7 +164,6 @@ class ProductListView extends Component {
                   </select>
                   <div className="btn-group ms-3" role="group">
                     <button
-                      aria-label="Grid"
                       type="button"
                       onClick={() => this.onChangeView("grid")}
                       className={`btn ${
@@ -152,7 +175,6 @@ class ProductListView extends Component {
                       <i className="bi bi-grid" />
                     </button>
                     <button
-                      aria-label="List"
                       type="button"
                       onClick={() => this.onChangeView("list")}
                       className={`btn ${
@@ -187,8 +209,6 @@ class ProductListView extends Component {
                 pageLimit={9}
                 pageNeighbours={3}
                 onPageChanged={this.onPageChanged}
-                sizing=""
-                alignment="justify-content-center"
               />
             </div>
           </div>

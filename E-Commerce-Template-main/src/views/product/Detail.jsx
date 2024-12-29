@@ -314,8 +314,8 @@ const ProductDetailView = () => {
           </div>
         </div>
         <div className="col-md-4">
-          <CardFeaturedProduct data={data.products} />
-          <CardServices />
+          {/* <CardFeaturedProduct data={data.products} />
+          <CardServices /> */}
         </div>
       </div>
     </div>

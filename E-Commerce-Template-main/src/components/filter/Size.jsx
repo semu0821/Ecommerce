@@ -1,6 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 
-const FilterSize = (props) => {
+const FilterSize = ({ onSizeFilterChange }) => {
+  const [selectedSizes, setSelectedSizes] = useState([]);
+
+  const handleSizeChange = (size) => {
+    const updatedSizes = selectedSizes.includes(size)
+      ? selectedSizes.filter((s) => s !== size)
+      : [...selectedSizes, size];
+    setSelectedSizes(updatedSizes);
+    onSizeFilterChange(updatedSizes); // Notify parent
+  };
+
   return (
     <div className="card mb-3">
       <div
@@ -13,81 +23,21 @@ const FilterSize = (props) => {
         Size
       </div>
       <ul className="list-group list-group-flush show" id="filterSize">
-        <li className="list-group-item">
-          <div className="row g-0">
-            <div className="form-check col">
+        {["S", "M", "L", "XL", "2XL", "3XL"].map((size) => (
+          <li className="list-group-item" key={size}>
+            <div className="form-check">
               <input
                 className="form-check-input"
                 type="checkbox"
-                id="flexCheckSize1"
+                id={`flexCheckSize-${size}`}
+                onChange={() => handleSizeChange(size)}
               />
-              <label className="form-check-label" htmlFor="flexCheckSize1">
-                S <span className="text-muted">(8)</span>
+              <label className="form-check-label" htmlFor={`flexCheckSize-${size}`}>
+                {size} <span className="text-muted">(count)</span>
               </label>
             </div>
-
-            <div className="form-check col">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="flexCheckSize4"
-              />
-              <label className="form-check-label" htmlFor="flexCheckSize4">
-                XL <span className="text-muted">(9)</span>
-              </label>
-            </div>
-          </div>
-        </li>
-        <li className="list-group-item">
-          <div className="row g-0">
-            <div className="form-check col">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="flexCheckSize2"
-              />
-              <label className="form-check-label" htmlFor="flexCheckSize2">
-                M <span className="text-muted">(10)</span>
-              </label>
-            </div>
-
-            <div className="form-check col">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="flexCheckSize5"
-              />
-              <label className="form-check-label" htmlFor="flexCheckSize5">
-                2XL <span className="text-muted">(5)</span>
-              </label>
-            </div>
-          </div>
-        </li>
-        <li className="list-group-item">
-          <div className="row g-0">
-            <div className="form-check col">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="flexCheckSize3"
-              />
-              <label className="form-check-label" htmlFor="flexCheckSize3">
-                L <span className="text-muted">(15)</span>
-              </label>
-            </div>
-
-            <div className="form-check col">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="flexCheckSize6"
-              />
-              <label className="form-check-label" htmlFor="flexCheckSize6">
-                3XL <span className="text-muted">(2)</span>
-              </label>
-            </div>
-          </div>
-        </li>
+          </li>
+        ))}
       </ul>
     </div>
   );

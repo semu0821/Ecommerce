@@ -5,6 +5,32 @@ const HomePage = () => {
   return (
     <div>
       <div className="container mt-4">
+     <div className="container mt-4">
+          <div className="card shadow-lg border-0">
+          <img
+            src="/images/banner/order.jpg" // Static image in the public folder
+            className="card-img"
+            alt="E-Commerce Banner"
+            style={{ height: "400px", objectFit: "cover" }}
+          /> 
+          
+            <div
+              className="card-img-overlay d-flex flex-column justify-content-center align-items-center text-center"
+              style={{
+                background: "rgba(0, 0, 0, 0.4)", // Transparent black background with 40% opacity
+              }}
+            >
+              <h1 className="text-white fw-bold display-4">Shop the Best Deals</h1>
+              <p className="text-white fs-5">
+                Discover exclusive offers on the latest trends in fashion,
+                electronics, and more.
+              </p>
+              <Link to="/category" className="btn btn-light btn-lg">
+                Shop Now
+              </Link>
+            </div>
+          </div>
+        </div>
         <div className="row">
           {/* Clothing Frame */}
           <div className="col-md-3">
@@ -13,7 +39,7 @@ const HomePage = () => {
                 src="/images/banner/clothing.jpg" // Static image in the public folder
                 className="card-img-top"
                 alt="Clothing"
-                style={{ height: "150px", objectFit: "cover" }}
+                style={{ height: "200px", objectFit: "cover" }}
               />
               <div className="card-body">
                 <h5 className="card-title">Clothing</h5>
@@ -32,7 +58,7 @@ const HomePage = () => {
                 src="/images/banner/accessory.jpg" // Static image in the public folder
                 className="card-img-top"
                 alt="Accessories"
-                style={{ height: "150px", objectFit: "cover" }}
+                style={{ height: "200px", objectFit: "cover" }}
               />
               <div className="card-body">
                 <h5 className="card-title">Accessories</h5>
@@ -51,7 +77,7 @@ const HomePage = () => {
                 src="/images/banner/mejlis.jpg" // Static image in the public folder
                 className="card-img-top"
                 alt="Home Materials"
-                style={{ height: "150px", objectFit: "cover" }}
+                style={{ height: "200px", objectFit: "cover" }}
               />
               <div className="card-body">
                 <h5 className="card-title">Home Materials</h5>
@@ -70,7 +96,7 @@ const HomePage = () => {
                 src="/images/banner/car.jpg" // Static image in the public folder
                 className="card-img-top"
                 alt="Car Accessories"
-                style={{ height: "150px", objectFit: "cover" }}
+                style={{ height: "200px", objectFit: "cover" }}
               />
               <div className="card-body">
                 <h5 className="card-title">Car Accessories</h5>
