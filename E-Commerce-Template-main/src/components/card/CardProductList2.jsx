@@ -1,74 +1,37 @@
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 
-const CardProductList2 = (props) => {
-  const product = props.data;
+const CardProductList2 = ({ data, review }) => {
+  const [product, setProduct] = useState(data);
+
+  useEffect(() => {
+    // If you need to fetch additional data for a product from an API
+    // you can add the API call here. For now, assume `data` is already
+    // passed as a prop.
+  }, [data]);
+
   return (
     <div className="card">
-      <div className="row g-0">
-        <div className="col-md-3 text-center">
-          <img src={product.img} className="img-fluid" alt="..." />
+      <img src={product.image_url} className="card-img-top" alt={product.name} />
+      <div className="card-body">
+        <h5 className="card-title">{product.name}</h5>
+        <p className="card-text">{product.description}</p>
+        <div>
+          <span className="fw-bold h5">${product.price.$numberDecimal}</span>
+          <span className="ms-2">
+            {Array.from({ length: product.star }, (_, idx) => (
+              <i className="bi bi-star-fill text-warning me-1" key={idx} />
+            ))}
+          </span>
         </div>
-        <div className="col-md-9">
-          <div className="card-body">
-            <h6 className="card-subtitle me-2 d-inline">
-              <Link to={product.link} className="text-decoration-none">
-                {product.name}
-              </Link>
-            </h6>
-            {product.isNew && (
-              <span className="badge bg-success me-2">New</span>
-            )}
-            {product.isHot && <span className="badge bg-danger me-2">Hot</span>}
-            {product.star > 0 && (
-              <span className="badge bg-secondary">
-                <i className="bi bi-star-fill text-warning me-1" />
-                {product.star}
-              </span>
-            )}
-          </div>
-
-          <div className="card-footer">
-            <div className="mb-2">
-              <span className="fw-bold h5 me-2">${product.price}</span>
-              {product.originPrice > 0 && (
-                <del className="small text-muted me-2">
-                  ${product.originPrice}
-                </del>
-              )}
-              {(product.discountPercentage > 0 ||
-                product.discountPrice > 0) && (
-                <span className={`rounded p-1 bg-warning me-2 small`}>
-                  -
-                  {product.discountPercentage > 0
-                    ? product.discountPercentage + "%"
-                    : "$" + product.discountPrice}
-                </span>
-              )}
-              {product.isFreeShipping && (
-                <span className="text-success small mb-2">
-                  <i className="bi bi-truck" /> Free shipping
-                </span>
-              )}
+        {review && (
+          <div className="my-3">
+            <h6>Review</h6>
+            <div>
+              <span className="fw-bold">Rating:</span> {review.rating} / 5
             </div>
-
-            <div className="btn-group  d-flex" role="group">
-              <button
-                type="button"
-                className="btn btn-sm btn-primary"
-                title="Add to cart"
-              >
-                <i className="bi bi-cart-plus" />
-              </button>
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-secondary"
-                title="Add to wishlist"
-              >
-                <i className="bi bi-heart-fill" />
-              </button>
-            </div>
+            <p>{review.comment}</p>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

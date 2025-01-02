@@ -1,63 +1,32 @@
-import { Link } from "react-router-dom";
+// CardProductGrid.js
+import React, { useState } from "react";
 
-const CardProductGrid = (props) => {
-  const product = props.data;
+const CardProductGrid = ({ data, onWishlistToggle }) => {
+  const [isInWishlist, setIsInWishlist] = useState(false);
+
+  const handleWishlistToggle = () => {
+    setIsInWishlist(!isInWishlist);
+    onWishlistToggle(data._id, !isInWishlist); // Call parent method to update the wishlist
+  };
+
   return (
     <div className="card">
-      <img src={product.img} className="card-img-top" alt="..." />
-      {product.isNew && (
-        <span className="badge bg-success position-absolute mt-2 ms-2">
-          New
-        </span>
-      )}
-      {product.isHot && (
-        <span className="badge bg-danger position-absolute r-0 mt-2 me-2">
-          Hot
-        </span>
-      )}
-      {(product.discountPercentage > 0 || product.discountPrice > 0) && (
-        <span
-          className={`rounded position-absolute p-2 bg-warning  ms-2 small ${
-            product.isNew ? "mt-5" : "mt-2"
-          }`}
-        >
-          -
-          {product.discountPercentage > 0
-            ? product.discountPercentage + "%"
-            : "$" + product.discountPrice}
-        </span>
-      )}
+      <img src={data.image_url} className="card-img-top" alt={data.name} />
       <div className="card-body">
-        <h6 className="card-subtitle mb-2">
-          <Link to={product.link} className="text-decoration-none">
-            {product.name}
-          </Link>
-        </h6>
-        <div className="my-2">
-          <span className="fw-bold h5">${product.price}</span>
-          {product.originPrice > 0 && (
-            <del className="small text-muted ms-2">${product.originPrice}</del>
-          )}
-          <span className="ms-2">
-            {Array.from({ length: product.star }, (_, key) => (
-              <i className="bi bi-star-fill text-warning me-1" key={key} />
-            ))}
-          </span>
+        <h5 className="card-title">{data.name}</h5>
+        <p className="card-text">{data.description}</p>
+        <div>
+          <span className="fw-bold h5">${data.price}</span>
         </div>
-        <div className="btn-group  d-flex" role="group">
-          <button
-            type="button"
-            className="btn btn-sm btn-primary"
-            title="Add to cart"
-          >
-            <i className="bi bi-cart-plus" />
-          </button>
+
+        {/* Heart button to toggle wishlist */}
+        <div className="btn-group d-flex" role="group">
           <button
             type="button"
             className="btn btn-sm btn-outline-secondary"
-            title="Add to wishlist"
+            onClick={handleWishlistToggle}
           >
-            <i className="bi bi-heart-fill" />
+            <i className={`bi ${isInWishlist ? 'bi-heart-fill' : 'bi-heart'}`} />
           </button>
         </div>
       </div>

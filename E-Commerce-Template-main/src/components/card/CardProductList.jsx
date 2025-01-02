@@ -11,9 +11,14 @@ const CardProductList = (props) => {
         <div className="col-md-6">
           <div className="card-body">
             <h6 className="card-subtitle me-2 d-inline">
-              <Link to={product.link} className="text-decoration-none">
-                {product.name}
-              </Link>
+            <Link 
+        to={{
+          pathname: product.link,
+        }} 
+        state={{ id: product._id }}
+      >
+      {product.name}
+      </Link>
             </h6>
             {product.isNew && (
               <span className="badge bg-success me-2">New</span>

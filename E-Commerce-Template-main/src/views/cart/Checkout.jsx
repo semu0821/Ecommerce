@@ -1,4 +1,61 @@
+import { useLocation } from "react-router-dom";
+
+import { useState,useEffect } from "react";
+import axios from "axios";
+import { BsCheckLg } from "react-icons/bs";
+
+
+
 const CheckoutView = () => {
+  const [cart, setCart] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+const {state:orderData}= useLocation()
+useEffect(() => {
+  const fetchCartData = async () => {
+    try {
+      // Fetch cart IDs from localStorage
+      const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
+
+      // Map IDs to fetch full product details from the backend
+      const productIds = storedCart.map((item) => item._id);
+      console.log(productIds);
+
+      if (productIds.length > 0) {
+        const response = await axios.get(`https://modestserver.onrender.com/api/products/${productIds}`);
+        const products = response.data;
+        console.log(products);
+
+        // Update cart with full product data and quantities from stored cart
+        // const updatedCart = storedCart.map((item) => {
+        //   const product = products.find((p) => p._id === item._id);
+        //   return {
+        //     ...product,
+        //     quantity: item.quantity, // Set the quantity from the localStorage cart
+        //   };
+        // });
+        setCart(products);
+        console.log(cart)
+      } else {
+        
+        setCart([]);
+      }
+
+      setLoading(false);
+    } catch (err) {
+      setError("Failed to load cart items.");
+      setLoading(false);
+    }
+  };
+
+  fetchCartData();
+}, []);
+
+const calculateTotal = () => {
+  return cart.reduce((total, item) => total + parseFloat(item.price.$numberDecimal) * item.quantity, 0).toFixed(2);
+};
+
+console.log(orderData)
   return (
     <div>
       <div className="bg-secondary border-top p-4 text-white mb-3">
@@ -253,39 +310,38 @@ const CheckoutView = () => {
                 <span className="badge bg-secondary float-end">3</span>
               </div>
               <ul className="list-group list-group-flush">
-                <li className="list-group-item d-flex justify-content-between lh-sm">
-                  <div>
-                    <h6 className="my-0">Product name</h6>
-                    <small className="text-muted">Brief description</small>
-                  </div>
-                  <span className="text-muted">$150</span>
-                </li>
-                <li className="list-group-item d-flex justify-content-between lh-sm">
-                  <div>
-                    <h6 className="my-0">Second product</h6>
-                    <small className="text-muted">Brief description</small>
-                  </div>
-                  <span className="text-muted">$12</span>
-                </li>
-                <li className="list-group-item d-flex justify-content-between lh-sm">
-                  <div>
-                    <h6 className="my-0">Third item</h6>
-                    <small className="text-muted">Brief description</small>
-                  </div>
-                  <span className="text-muted">$50</span>
-                </li>
-                <li className="list-group-item d-flex justify-content-between bg-light">
-                  <div className="text-success">
-                    <h6 className="my-0">Promo code</h6>
-                    <small>EXAMPLECODE</small>
-                  </div>
-                  <span className="text-success">−$50</span>
-                </li>
-                <li className="list-group-item d-flex justify-content-between">
-                  <span>Total (USD)</span>
-                  <strong>$162</strong>
-                </li>
-              </ul>
+  {cart.map((item) => (
+    <li
+      key={item._id}
+      className="list-group-item d-flex justify-content-between lh-sm"
+    >
+      <div>
+        <h6 className="my-0">{item.name}</h6>
+        <small className="text-muted">
+          {item.description || "No description available"}
+        </small>
+      </div>
+      <span className="text-muted">
+        ${(item.price * item.quantity).toFixed(2)}
+      </span>
+    </li>
+ 
+  // <li className="list-group-item d-flex justify-content-between bg-light">
+  //   <div className="text-success">
+  //     <h6 className="my-0">Promo code</h6>
+  //     <small>EXAMPLECODE</small>
+  //   </div>
+  //   <span className="text-success">−$50</span>
+  // </li>
+
+  // {/* Total Amount */}
+  // <li className="list-group-item d-flex justify-content-between">
+  //   <span>Total (USD)</span>
+  //   <strong>${item.total_quantity}</strong>
+  // </li>
+  ))}
+
+</ul>
             </div>
           </div>
         </div>

@@ -1,40 +1,54 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Field, reduxForm } from "redux-form";
 import { compose } from "redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import renderFormGroupField from "../../helpers/renderFormGroupField";
 import {
   required,
   maxLength20,
   minLength8,
-  maxLengthMobileNo,
-  minLengthMobileNo,
-  digit,
-} from "../../helpers/validation";
-import { ReactComponent as IconPhone } from "bootstrap-icons/icons/phone.svg";
-import { ReactComponent as IconShieldLock } from "bootstrap-icons/icons/shield-lock.svg";
+  email,
+} from "../../helpers/validation"; // Assuming email validation is added
+import { ReactComponent as IconEnvelope } from "bootstrap-icons/icons/envelope.svg"; // Email icon
+import { ReactComponent as IconShieldLock } from "bootstrap-icons/icons/shield-lock.svg"; // Password icon
+import { AuthContext } from "../../contexts/AuthContext"; // Import AuthContext
 
 const SignInForm = (props) => {
-  const { handleSubmit, submitting, onSubmit, submitFailed } = props;
+  const { handleSubmit, submitting, submitFailed } = props;
+  const navigate = useNavigate(); // Initialize useNavigate
+  const { login } = useContext(AuthContext); // Destructure login from AuthContext
+
+  // Handle form submission
+  const handleFormSubmit = async (formValues) => {
+    try {
+      await login(formValues.email, formValues.password); // Use login from AuthContext
+      navigate("/"); // Redirect to the home page upon successful login
+    } catch (error) {
+      // Handle login error
+      alert(error.message || "Login failed. Please check your credentials.");
+    }
+  };
+
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(handleFormSubmit)} // Use the handleFormSubmit function
       className={`needs-validation ${submitFailed ? "was-validated" : ""}`}
       noValidate
     >
+      {/* Email field */}
       <Field
-        name="mobileNo"
-        type="number"
-        label="Mobile no"
+        name="email"
+        type="email"
+        label="Email"
         component={renderFormGroupField}
-        placeholder="Mobile no without country code"
-        icon={IconPhone}
-        validate={[required, maxLengthMobileNo, minLengthMobileNo, digit]}
+        placeholder="Enter your email"
+        icon={IconEnvelope}
+        validate={[required, email]} // Email validation added
         required={true}
-        max="999999999999999"
-        min="9999"
         className="mb-3"
       />
+
+      {/* Password field */}
       <Field
         name="password"
         type="password"
@@ -48,6 +62,8 @@ const SignInForm = (props) => {
         minLength="8"
         className="mb-3"
       />
+
+      {/* Submit button */}
       <div className="d-grid">
         <button
           type="submit"
@@ -57,6 +73,8 @@ const SignInForm = (props) => {
           Log In
         </button>
       </div>
+
+      {/* Links */}
       <Link className="float-start" to="/account/signup" title="Sign Up">
         Create your account
       </Link>
@@ -67,24 +85,9 @@ const SignInForm = (props) => {
       >
         Forgot password?
       </Link>
+
       <div className="clearfix"></div>
       <hr></hr>
-      <div className="row">
-        <div className="col- text-center">
-          <p className="text-muted small">Or you can join with</p>
-        </div>
-        <div className="col- text-center">
-          <Link to="/" className="btn btn-light text-white bg-twitter me-3">
-            <i className="bi bi-twitter-x" />
-          </Link>
-          <Link to="/" className="btn btn-light text-white me-3 bg-facebook">
-            <i className="bi bi-facebook mx-1" />
-          </Link>
-          <Link to="/" className="btn btn-light text-white me-3 bg-google">
-            <i className="bi bi-google mx-1" />
-          </Link>
-        </div>
-      </div>
     </form>
   );
 };

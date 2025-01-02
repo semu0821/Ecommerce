@@ -2,6 +2,15 @@ export const required = (value) =>
   value || (typeof value == "number" && value === 0)
     ? undefined
     : "This field is required";
+    // In your validation.js file
+
+export const matchPassword = (value, allValues) => {
+  if (value !== allValues.password) {
+    return "Passwords do not match";
+  }
+  return undefined;
+};
+
 export const number = (value) =>
   value && isNaN(Number(value)) ? "Must be a number" : undefined;
 export const digit = (value) =>
@@ -9,7 +18,7 @@ export const digit = (value) =>
 const maxLength = (max) => (value) =>
   value && value.length > max ? `Must be ${max} characters or less` : undefined;
 export const maxLengthOTP = maxLength(6);
-export const maxLengthMobileNo = maxLength(15);
+export const maxLengthMobileNo = maxLength(35);
 export const maxLength20 = maxLength(20);
 export const maxLength50 = maxLength(50);
 export const maxLength150 = maxLength(150);

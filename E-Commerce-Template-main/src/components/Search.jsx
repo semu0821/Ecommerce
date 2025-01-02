@@ -1,18 +1,31 @@
-const Search = () => {
+import React, { useState } from "react";
+
+const Search = ({ onSearch }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (onSearch) {
+      onSearch(searchTerm); // Pass the search term to the parent component
+    }
+  };
+
   return (
-    <form action="#" className="search">
+    <form onSubmit={handleSearch} className="search">
       <div className="input-group">
         <input
           id="search"
           name="search"
           type="text"
-          className="form-control"
-          placeholder="Search"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)} // Update state on input change
+          className="form-control search-input"
+          placeholder="Search products"
           required
         />
-        <label className="visually-hidden" htmlFor="search"></label>
+        <label className="visually-hidden" htmlFor="search">Search Products</label>
         <button
-          className="btn btn-primary text-white"
+          className="btn btn-search text-white"
           type="submit"
           aria-label="Search"
         >
@@ -22,4 +35,5 @@ const Search = () => {
     </form>
   );
 };
+
 export default Search;

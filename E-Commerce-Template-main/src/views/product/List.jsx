@@ -1,8 +1,8 @@
-import React, { Component, lazy } from "react";
-import { data } from "../../data";
+import React, { Component, lazy, useContext } from "react";
+import axios from "axios";
+import { SearchContext } from "../../contexts/SearchContext";
 
 const Paging = lazy(() => import("../../components/Paging"));
-const Breadcrumb = lazy(() => import("../../components/Breadcrumb"));
 const FilterCategory = lazy(() => import("../../components/filter/Category"));
 const FilterPrice = lazy(() => import("../../components/filter/Price"));
 const FilterSize = lazy(() => import("../../components/filter/Size"));
@@ -13,7 +13,10 @@ const CardProductGrid = lazy(() => import("../../components/card/CardProductGrid
 const CardProductList = lazy(() => import("../../components/card/CardProductList"));
 
 class ProductListView extends Component {
+  static contextType = SearchContext;
+
   state = {
+    products: [],
     currentProducts: [],
     currentPage: null,
     totalPages: null,
@@ -23,61 +26,74 @@ class ProductListView extends Component {
     selectedCategory: "",
     selectedRating: null,
     selectedSizes: [],
-    selectedColors: [],  // Added state for color filters
+    selectedColors: [],
+    searchTerm: "",
+    loading: true,
+    error: null,
   };
 
-  UNSAFE_componentWillMount() {
-    this.applyFilters();
+  async componentDidMount() {
+    try {
+      const response = await axios.get("https://modestserver.onrender.com/api/products");
+      this.setState(
+        {
+          products: response.data,
+          totalItems: response.data.length,
+          loading: false,
+        },
+        this.applyFilters
+      );
+    } catch (error) {
+      this.setState({ error: "Failed to load products.", loading: false });
+    }
   }
 
+  formatPrice = (price) => {
+    if (price && price.$numberDecimal) {
+      return parseFloat(price.$numberDecimal);
+    }
+    return price;
+  };
+
   onPageChanged = (page) => {
-    let products = this.getProducts();
     const { currentPage, pageLimit } = page;
     const offset = (currentPage - 1) * pageLimit;
-    const currentProducts = products.slice(offset, offset + pageLimit);
+    const currentProducts = this.getFilteredProducts().slice(offset, offset + pageLimit);
     this.setState({ currentPage, currentProducts });
   };
 
-  onChangeView = (view) => {
-    this.setState({ view });
-  };
-
-  onPriceFilterChange = (selectedRanges) => {
-    this.setState({ priceFilter: selectedRanges }, this.applyFilters);
-  };
-
-  onCategoryFilterChange = (category) => {
-    this.setState({ selectedCategory: category }, this.applyFilters);
-  };
-
-  onRatingFilterChange = (rating) => {
-    this.setState({ selectedRating: rating }, this.applyFilters);
-  };
-
-  onSizeFilterChange = (selectedSizes) => {
-    this.setState({ selectedSizes }, this.applyFilters);
-  };
-
-  onColorFilterChange = (selectedColors) => {
-    this.setState({ selectedColors }, this.applyFilters);
-  };
-
-  onClearFilters = () => {
-    // Reset all filter states to their initial values
-    this.setState(
-      {
-        priceFilter: [],
-        selectedCategory: "",
-        selectedRating: null,
-        selectedSizes: [],
-        selectedColors: [],
-      },
-      this.applyFilters  // Apply the filters after reset
-    );
-  };
-
   applyFilters = () => {
-    let products = this.getProducts();
+    const { searchTerm } = this.state;
+    let filteredProducts = this.getFilteredProducts();
+
+    // Filter products based on search term
+    if (searchTerm) {
+      filteredProducts = filteredProducts.filter((product) =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    const totalItems = filteredProducts.length;
+
+    this.setState({
+      totalItems,
+      currentProducts: filteredProducts.slice(0, 9),
+      currentPage: 1,
+    });
+  };
+
+  getFilteredProducts = () => {
+    let products = [...this.state.products];
+
+    if (this.state.priceFilter.length > 0) {
+      products = products.filter((product) =>
+        this.state.priceFilter.some(
+          (range) =>
+            this.formatPrice(product.price) >= range[0] &&
+            this.formatPrice(product.price) <= range[1]
+        )
+      );
+    }
 
     if (this.state.selectedCategory) {
       products = products.filter(
@@ -98,60 +114,91 @@ class ProductListView extends Component {
 
     if (this.state.selectedColors.length > 0) {
       products = products.filter((product) =>
-        this.state.selectedColors.includes(product.color.toLowerCase())  // Assuming product color is stored as a string
+        this.state.selectedColors.includes(product.color.toLowerCase())
       );
     }
-
-    const totalItems = products.length;
-
-    this.setState({
-      totalItems,
-      currentProducts: products.slice(0, 9),
-      currentPage: 1,
-    });
-  };
-
-  getProducts = () => {
-    let products = data.products;
-
-    if (this.state.priceFilter.length > 0) {
-      products = products.filter((product) =>
-        this.state.priceFilter.some(
-          (range) => product.price >= range[0] && product.price <= range[1]
-        )
-      );
-    }
-
-    products = products.concat(products).concat(products).concat(products);  // Repeat the products (as per original logic)
 
     return products;
   };
 
+  onSearchChange = (e) => {
+    this.setState({ searchTerm: e.target.value }, this.applyFilters);
+  };
+
+  onChangeView = (viewType) => {
+    this.setState({ view: viewType });
+  };
+
   render() {
+    const { loading, error, currentProducts, totalItems, view, searchTerm } = this.state;
+
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>{error}</div>;
+
+    const renderProductGrid = currentProducts.map((product, idx) => (
+      <div key={idx} className="col-md-4">
+        <CardProductGrid
+          data={{
+            ...product,
+            price: this.formatPrice(product.price),
+            discount: this.formatPrice(product.discount),
+          }}
+        />
+      </div>
+    ));
+
+    const renderProductList = currentProducts.map((product, idx) => (
+      <div key={idx} className="col-md-12">
+        <CardProductList
+          data={{
+            ...product,
+            price: this.formatPrice(product.price),
+            discount: this.formatPrice(product.discount),
+          }}
+        />
+      </div>
+    ));
+
     return (
       <React.Fragment>
-        <Breadcrumb />
         <div className="container-fluid mb-3">
           <div className="row">
+            {/* Sidebar Filters */}
             <div className="col-md-3">
-              <FilterCategory onCategoryFilterChange={this.onCategoryFilterChange} />
-              <FilterPrice onChange={this.onPriceFilterChange} />
-              <FilterStar onRatingFilterChange={this.onRatingFilterChange} />
-              <FilterSize onSizeFilterChange={this.onSizeFilterChange} />
+              <FilterCategory onCategoryFilterChange={(category) => this.setState({ selectedCategory: category }, this.applyFilters)} />
+              <FilterPrice onChange={(priceRange) => this.setState({ priceFilter: priceRange }, this.applyFilters)} />
+              <FilterStar onRatingFilterChange={(rating) => this.setState({ selectedRating: rating }, this.applyFilters)} />
+              <FilterSize onSizeFilterChange={(sizes) => this.setState({ selectedSizes: sizes }, this.applyFilters)} />
               <FilterColor
                 selectedColors={this.state.selectedColors}
-                onColorFilterChange={this.onColorFilterChange}
+                onColorFilterChange={(colors) => this.setState({ selectedColors: colors }, this.applyFilters)}
               />
-              <FilterClear onClearFilters={this.onClearFilters} />
+              <FilterClear onClearFilters={() => this.setState(
+                {
+                  priceFilter: [],
+                  selectedCategory: "",
+                  selectedRating: null,
+                  selectedSizes: [],
+                  selectedColors: [],
+                },
+                this.applyFilters
+              )} />
             </div>
-            <div className="col-md-9">
-              <div className="row">
-                <div className="col-7">
-                  <span className="align-middle fw-bold">
-                    {this.state.totalItems} results found
-                  </span>
-                </div>
-                <div className="col-5 d-flex justify-content-end">
+
+            {/* Main Product List */}
+            <div className="col-md-6">
+              {/* Search Bar */}
+              <div className="mb-3">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search for products..."
+                  value={searchTerm}
+                  onChange={this.onSearchChange}
+                />
+              </div>
+              <div className="row mb-3">
+                <div className="col-12 d-flex justify-content-end">
                   <select
                     className="form-select mw-180 float-start"
                     aria-label="Default select"
@@ -166,22 +213,14 @@ class ProductListView extends Component {
                     <button
                       type="button"
                       onClick={() => this.onChangeView("grid")}
-                      className={`btn ${
-                        this.state.view === "grid"
-                          ? "btn-primary"
-                          : "btn-outline-primary"
-                      }`}
+                      className={`btn ${view === "grid" ? "btn-primary" : "btn-outline-primary"}`}
                     >
                       <i className="bi bi-grid" />
                     </button>
                     <button
                       type="button"
                       onClick={() => this.onChangeView("list")}
-                      className={`btn ${
-                        this.state.view === "list"
-                          ? "btn-primary"
-                          : "btn-outline-primary"
-                      }`}
+                      className={`btn ${view === "list" ? "btn-primary" : "btn-outline-primary"}`}
                     >
                       <i className="bi bi-list" />
                     </button>
@@ -190,22 +229,11 @@ class ProductListView extends Component {
               </div>
               <hr />
               <div className="row g-3">
-                {this.state.view === "grid" &&
-                  this.state.currentProducts.map((product, idx) => (
-                    <div key={idx} className="col-md-4">
-                      <CardProductGrid data={product} />
-                    </div>
-                  ))}
-                {this.state.view === "list" &&
-                  this.state.currentProducts.map((product, idx) => (
-                    <div key={idx} className="col-md-12">
-                      <CardProductList data={product} />
-                    </div>
-                  ))}
+                {view === "grid" ? renderProductGrid : renderProductList}
               </div>
               <hr />
               <Paging
-                totalRecords={this.state.totalItems}
+                totalRecords={totalItems}
                 pageLimit={9}
                 pageNeighbours={3}
                 onPageChanged={this.onPageChanged}

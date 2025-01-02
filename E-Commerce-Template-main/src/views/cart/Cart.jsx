@@ -1,18 +1,51 @@
-import { lazy } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-const CouponApplyForm = lazy(() =>
-  import("../../components/others/CouponApplyForm")
-);
 
 const CartView = () => {
-  const onSubmitApplyCouponCode = async (values) => {
-    alert(JSON.stringify(values));
+  const [cart, setCart] = useState([]);
+
+  useEffect(() => {
+    // Fetch cart data from localStorage and set it in the state
+    const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
+    setCart(storedCart);
+  }, []);
+
+  const updateQuantity = (index, quantity) => {
+    const updatedCart = [...cart];
+    updatedCart[index].quantity = Math.max(1, quantity);
+    setCart(updatedCart);
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
   };
+
+  const removeItem = (index) => {
+    const updatedCart = cart.filter((_, i) => i !== index);
+    setCart(updatedCart);
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+  };
+
+  const calculateTotal = () => {
+    return cart.reduce((total, item) => total + parseFloat(item.price.$numberDecimal) * item.quantity, 0).toFixed(2);
+  };
+
+  const prepareOrderData = () => {
+    return {
+      user: "",
+      total_price: calculateTotal(),
+      status: "Pending",
+      items: cart.map((item) => ({
+        product: item._id,
+        quantity: item.quantity,
+        price: parseFloat(item.price.$numberDecimal),
+      })),
+    };
+  };
+
   return (
     <div>
       <div className="bg-secondary border-top p-4 text-white mb-3">
         <h1 className="display-6">Shopping Cart</h1>
       </div>
+      
       <div className="container mb-3">
         <div className="row">
           <div className="col-md-9">
@@ -22,139 +55,80 @@ const CartView = () => {
                   <thead className="text-muted">
                     <tr className="small text-uppercase">
                       <th scope="col">Product</th>
-                      <th scope="col" width={120}>
-                        Quantity
-                      </th>
-                      <th scope="col" width={150}>
-                        Price
-                      </th>
+                      <th scope="col" width={120}>Quantity</th>
+                      <th scope="col" width={150}>Price</th>
                       <th scope="col" className="text-end" width={130}></th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>
-                        <div className="row">
-                          <div className="col-3 d-none d-md-block">
-                            <img
-                              src="../../images/products/tshirt_red_480x400.webp"
-                              width="80"
-                              alt="..."
-                            />
-                          </div>
-                          <div className="col">
-                            <Link
-                              to="/product/detail"
-                              className="text-decoration-none"
-                            >
-                              Another name of some product goes just here
-                            </Link>
-                            <p className="small text-muted">
-                              Size: XL, Color: blue, Brand: XYZ
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="input-group input-group-sm mw-140">
-                          <button
-                            className="btn btn-primary text-white"
-                            type="button"
-                          >
-                            <i className="bi bi-dash-lg"></i>
-                          </button>
-                          <input
-                            type="text"
-                            className="form-control"
-                            defaultValue="1"
-                          />
-                          <button
-                            className="btn btn-primary text-white"
-                            type="button"
-                          >
-                            <i className="bi bi-plus-lg"></i>
-                          </button>
-                        </div>
-                      </td>
-                      <td>
-                        <var className="price">$237.00</var>
-                        <small className="d-block text-muted">
-                          $79.00 each
-                        </small>
-                      </td>
-                      <td className="text-end">
-                        <button className="btn btn-sm btn-outline-secondary me-2">
-                          <i className="bi bi-heart-fill"></i>
-                        </button>
-                        <button className="btn btn-sm btn-outline-danger">
-                          <i className="bi bi-trash"></i>
-                        </button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div className="row">
-                          <div className="col-3 d-none d-md-block">
-                            <img
-                              src="../../images/products/tshirt_grey_480x400.webp"
-                              width="80"
-                              alt="..."
-                            />
-                          </div>
-                          <div className="col">
-                            <Link
-                              to="/product/detail"
-                              className="text-decoration-none"
-                            >
-                              Another name of some product goes just here
-                            </Link>
-                            <p className="small text-muted">
-                              Size: XL, Color: blue, Brand: XYZ
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="input-group input-group-sm mw-140">
-                          <button
-                            className="btn btn-primary text-white"
-                            type="button"
-                          >
-                            <i className="bi bi-dash-lg"></i>
-                          </button>
-                          <input
-                            type="text"
-                            className="form-control"
-                            defaultValue="1"
-                          />
-                          <button
-                            className="btn btn-primary text-white"
-                            type="button"
-                          >
-                            <i className="bi bi-plus-lg"></i>
-                          </button>
-                        </div>
-                      </td>
-                      <td>
-                        <var className="price">$237.00</var>
-                        <small className="d-block text-muted">
-                          $79.00 each
-                        </small>
-                      </td>
-                      <td className="text-end">
-                        <button className="btn btn-sm btn-outline-secondary me-2">
-                          <i className="bi bi-heart-fill"></i>
-                        </button>
-                        <button className="btn btn-sm btn-outline-danger">
-                          <i className="bi bi-trash"></i>
-                        </button>
-                      </td>
-                    </tr>
+                    {cart.length === 0 ? (
+                      <tr>
+                        <td colSpan="4" className="text-center">
+                          <strong>Your cart is empty.</strong>
+                        </td>
+                      </tr>
+                    ) : (
+                      cart.map((item, index) => (
+                        <tr key={item._id}>
+                          <td>
+                            <div className="row">
+                              <div className="col-3 d-none d-md-block">
+                                <img src={item.image_url} width="80" alt={item.name} />
+                              </div>
+                              <div className="col">
+                                <Link to={`/product/detail/${item._id}`} className="text-decoration-none">
+                                  {item.name}
+                                </Link>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="input-group input-group-sm mw-140">
+                              <button
+                                className="btn btn-primary text-white"
+                                type="button"
+                                onClick={() => updateQuantity(index, item.quantity - 1)}
+                              >
+                                <i className="bi bi-dash-lg"></i>
+                              </button>
+                              <input
+                                type="text"
+                                className="form-control"
+                                value={item.quantity}
+                                readOnly
+                              />
+                              <button
+                                className="btn btn-primary text-white"
+                                type="button"
+                                onClick={() => updateQuantity(index, item.quantity + 1)}
+                              >
+                                <i className="bi bi-plus-lg"></i>
+                              </button>
+                            </div>
+                          </td>
+                          <td>
+                            <var className="price">${(parseFloat(item.price.$numberDecimal) * item.quantity).toFixed(2)}</var>
+                            <small className="d-block text-muted">
+                              ${parseFloat(item.price.$numberDecimal).toFixed(2)} each
+                            </small>
+                          </td>
+                          <td className="text-end">
+                            <button className="btn btn-sm btn-outline-danger" onClick={() => removeItem(index)}>
+                              <i className="bi bi-trash"></i>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
               <div className="card-footer">
-                <Link to="/checkout" className="btn btn-primary float-end">
+                <Link
+                  to="/checkout"
+                  state={prepareOrderData()}
+                  className="btn btn-primary float-end"
+                >
                   Make Purchase <i className="bi bi-chevron-right"></i>
                 </Link>
                 <Link to="/" className="btn btn-secondary">
@@ -169,65 +143,17 @@ const CartView = () => {
             </div>
           </div>
           <div className="col-md-3">
-            <div className="card mb-3">
-              <div className="card-body">
-                <CouponApplyForm onSubmit={onSubmitApplyCouponCode} />
-              </div>
-            </div>
             <div className="card">
               <div className="card-body">
-                <dl className="row border-bottom">
-                  <dt className="col-6">Total price:</dt>
-                  <dd className="col-6 text-end">$1,568</dd>
-
-                  <dt className="col-6 text-success">Discount:</dt>
-                  <dd className="col-6 text-success text-end">-$58</dd>
-                  <dt className="col-6 text-success">
-                    Coupon:{" "}
-                    <span className="small text-muted">EXAMPLECODE</span>{" "}
-                  </dt>
-                  <dd className="col-6 text-success text-end">-$68</dd>
-                </dl>
                 <dl className="row">
                   <dt className="col-6">Total:</dt>
-                  <dd className="col-6 text-end  h5">
-                    <strong>$1,350</strong>
+                  <dd className="col-6 text-end h5">
+                    <strong>${calculateTotal()}</strong>
                   </dd>
                 </dl>
-                <hr />
-                <p className="text-center">
-                  <img
-                    src="../../images/payment/payments.webp"
-                    alt="..."
-                    height={26}
-                  />
-                </p>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-      <div className="bg-light border-top p-4">
-        <div className="container">
-          <h6>Payment and refund policy</h6>
-          <p>
-            Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do
-            eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
-            ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-            aliquip ex ea commodo consequat. Duis aute irure dolor in
-            reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-            pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-            culpa qui officia deserunt mollit anim id est laborum.
-          </p>
-          <p>
-            Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do
-            eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
-            ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-            aliquip ex ea commodo consequat. Duis aute irure dolor in
-            reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-            pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-            culpa qui officia deserunt mollit anim id est laborum.
-          </p>
         </div>
       </div>
     </div>

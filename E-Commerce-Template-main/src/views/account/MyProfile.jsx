@@ -9,20 +9,24 @@ const CardListForm = lazy(() =>
 );
 
 class MyProfileView extends Component {
-  state = { imagePreview: "", isDeleting: false };
+  state = {
+    imagePreview: "",
+  };
 
   onSubmitProfile = async (values) => {
-    alert(JSON.stringify(values));
+    // Handle profile form submission
+    console.log("Profile Updated:", values);
   };
 
   onSubmitChangePassword = async (values) => {
-    alert(JSON.stringify(values));
+    // Handle password change
+    console.log("Password Changed:", values);
   };
 
-  onImageChange = async (obj) => {
-    if (obj) {
-      const val = await this.getBase64(obj);
-      this.setState({ imagePreview: val });
+  onImageChange = async (file) => {
+    if (file) {
+      const base64Image = await this.getBase64(file);
+      this.setState({ imagePreview: base64Image });
     } else {
       this.setState({ imagePreview: "" });
     }
@@ -32,27 +36,46 @@ class MyProfileView extends Component {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
-      reader.readAsDataURL(file);
       reader.onerror = (error) => reject(error);
+      reader.readAsDataURL(file);
     });
   };
+
   render() {
     return (
-      <div className="container-fluid my-3">
-        <div className="row">
-          <div className="col-md-4">
-            <ProfileForm
-              onSubmit={this.onSubmitProfile}
-              onImageChange={this.onImageChange}
-              imagePreview={this.state.imagePreview}
-            />
+      <div className="container my-4">
+        <h3 className="mb-4 text-center">My Profile</h3>
+        <div className="row g-4">
+          {/* Profile Section */}
+          <div className="col-lg-4">
+            <div className="card">
+              <div className="card-header bg-primary text-white text-center">
+                <h5>Profile Information</h5>
+              </div>
+              <div className="card-body">
+                <ProfileForm
+                  onSubmit={this.onSubmitProfile}
+                  onImageChange={this.onImageChange}
+                  imagePreview={this.state.imagePreview}
+                />
+              </div>
+            </div>
           </div>
-          <div className="col-md-8">
-            <ChangePasswordForm onSubmit={this.onSubmitChangePassword} />
-            <br></br>
-            <SettingForm />
-            <br></br>
-            <CardListForm />
+
+          {/* Password and Settings Section */}
+          <div className="col-lg-8">
+            <div className="card mb-4">
+              <div className="card-header bg-success text-white text-center">
+                <h5>Change Password</h5>
+              </div>
+              <div className="card-body">
+                <ChangePasswordForm onSubmit={this.onSubmitChangePassword} />
+              </div>
+            </div>
+
+          
+
+           
           </div>
         </div>
       </div>
