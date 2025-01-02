@@ -21,7 +21,7 @@ import { AuthContext } from "../../contexts/AuthContext"; // Import AuthContext
 const SignUpForm = (props) => {
   const { handleSubmit, submitting, submitFailed } = props;
   const navigate = useNavigate();
-  const { register } = useContext(AuthContext); // Use register from AuthContext
+  const { signup } = useContext(AuthContext); // Use register from AuthContext
 
   // Custom render function for Phone Input
   const renderPhoneInput = ({ input, meta }) => (
@@ -49,7 +49,7 @@ const SignUpForm = (props) => {
   // Handle form submission and connect to context
   const handleFormSubmit = async (formValues) => {
     try {
-      await register({
+      await signup({
         name: `${formValues.firstName} ${formValues.lastName}`,
         email: formValues.email,
         password: formValues.password,

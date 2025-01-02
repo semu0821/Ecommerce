@@ -1,68 +1,193 @@
-import { useLocation } from "react-router-dom";
+import { useState, useEffect, useContext } from "react";
+import { useLocation,useNavigate } from "react-router-dom";
 
-import { useState,useEffect } from "react";
 import axios from "axios";
-import { BsCheckLg } from "react-icons/bs";
-
-
+import { AuthContext } from "../../contexts/AuthContext";
 
 const CheckoutView = () => {
-  const [cart, setCart] = useState([]);
+  const { state: orderData } = useLocation();
+  const [productDetails, setProductDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-const {state:orderData}= useLocation()
-useEffect(() => {
-  const fetchCartData = async () => {
-    try {
-      // Fetch cart IDs from localStorage
-      const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
 
-      // Map IDs to fetch full product details from the backend
-      const productIds = storedCart.map((item) => item._id);
-      console.log(productIds);
+  const { user } = useContext(AuthContext); 
+  console.log(user)
+  const [contactInfo, setContactInfo] = useState({
+    email: user?.user?.email || "",
+    phone: user?.user?.phone_number || "",
+  });
+  const [shippingInfo, setShippingInfo] = useState({
+    name: user?.user?.name || "",
+    address: "",
+    city: "",
+  });
+  const [orderSuccess, setOrderSuccess] = useState(null);  // State to manage success/error messages
+  const navigate = useNavigate();  // Use navigate for redirection
 
-      if (productIds.length > 0) {
-        const response = await axios.get(`https://modestserver.onrender.com/api/products/${productIds}`);
-        const products = response.data;
-        console.log(products);
+  useEffect(() => {
+    const fetchProductDetails = async () => {
+      try {
+        const productId = orderData.items[0].product;
+        const response = await axios.get(`https://modestserver.onrender.com/api/products/${productId}`);
+        const productData = response.data;
 
-        // Update cart with full product data and quantities from stored cart
-        // const updatedCart = storedCart.map((item) => {
-        //   const product = products.find((p) => p._id === item._id);
-        //   return {
-        //     ...product,
-        //     quantity: item.quantity, // Set the quantity from the localStorage cart
-        //   };
-        // });
-        setCart(products);
-        console.log(cart)
-      } else {
-        
-        setCart([]);
+        productData.price = Number(productData.price.$numberDecimal);
+        productData.discount = Number(productData.discount.$numberDecimal);
+
+        setProductDetails(productData);
+        setLoading(false);
+      } catch (err) {
+        setError("Failed to load product details.");
+        setLoading(false);
       }
+    };
 
-      setLoading(false);
-    } catch (err) {
-      setError("Failed to load cart items.");
-      setLoading(false);
+    if (orderData.items.length > 0) {
+      fetchProductDetails();
     }
+  }, [orderData]);
+
+  const calculateTotal = () => {
+    return orderData.items.reduce(
+      (total, item) => total + item.price * item.quantity, 0
+    ).toFixed(2);
   };
 
-  fetchCartData();
-}, []);
+  const handleContactChange = (e) => {
+    const { name, value } = e.target;
+    setContactInfo((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
-const calculateTotal = () => {
-  return cart.reduce((total, item) => total + parseFloat(item.price.$numberDecimal) * item.quantity, 0).toFixed(2);
-};
+  const handleShippingChange = (e) => {
+    const { name, value } = e.target;
+    setShippingInfo((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
-console.log(orderData)
+
+  // const handlePlaceOrder = async () => {
+  
+  //   const orderSummary = {
+  //     user: {
+  //       id: user.user._id,
+  //       email: contactInfo.email,
+  //       phone: contactInfo.phone,
+  //       name: shippingInfo.name,
+  //     },
+  //     shippingInfo: {
+  //       address: shippingInfo.address,
+  //       city: shippingInfo.city,
+  //     },
+  //     items: orderData.items.map(item => ({
+  //       product: item.product,
+  //       quantity: item.quantity,
+  //       price: productDetails?.price,
+  //     })),
+  //     total_price: calculateTotal(),
+  //     status: 'pending',
+  //   };
+  
+  //   try {
+  //     const response = await axios.post('http://localhost:5000/api/orders', orderSummary);
+  
+  //     if (response.status === 201) {
+  //       console.log("Order placed successfully:", response.data);
+  //       setOrderSuccess('Order placed successfully!');  // Set success message
+  //       setTimeout(() => {
+  //         // Redirect to order confirmation or dashboard after a few seconds
+  //         navigate('/invoice');  // Redirect to /invoice route
+  //       }, 2000); // Redirect after 2 seconds for a smoother experience
+  //     } else {
+  //       console.log("Failed to place order:", response.data);
+  //       setOrderSuccess('Failed to place the order. Please try again.');  // Set error message
+  //     }
+  //   } catch (error) {
+  //     console.error("Error placing order:", error.message);
+  //     setOrderSuccess('Error placing order. Please try again.');  // Set error message
+  //   }
+  // };
+  const handlePlaceOrder = async () => {
+    const orderSummary = {
+      user: {
+        id: user.user._id,
+        email: contactInfo.email,
+        phone: contactInfo.phone,
+        name: shippingInfo.name,
+      },
+      shippingInfo: {
+        address: shippingInfo.address,
+        city: shippingInfo.city,
+      },
+      items: orderData.items.map(item => ({
+        product: item.product,
+        quantity: item.quantity,
+        price: productDetails?.price,
+      })),
+      total_price: calculateTotal(),
+      status: 'pending',
+    };
+  
+    try {
+      // Step 1: Register the order
+      const orderResponse = await axios.post('http://localhost:5000/api/orders', orderSummary);
+    
+      if (orderResponse.status === 201) {
+        console.log("Order registered successfully:", orderResponse.data);
+        const orderId = orderResponse.data.id; // Get the order ID from the response
+    
+        // Step 2: Proceed to payment
+        const paymentResponse = await axios.post('http://localhost:5000/api/pay', { orderSummary });
+    
+        if (paymentResponse.status === 200) {
+          const checkoutUrl = paymentResponse.data.checkout_url;
+          window.location.href = checkoutUrl; // Redirect to the payment gateway
+    
+         
+          // Step 3: Handle payment verification
+          if (paymentResponse.status === 200) {
+            console.log("Payment verified successfully:", paymentResponse.data);
+    
+            // Update the order status or inform the user of success
+            setOrderSuccess('Order placed and payment verified successfully!');
+            // setTimeout(() => {
+            //   // Redirect to invoice or dashboard
+            //   navigate('/invoice');
+            // }, 2000);
+          } else {
+            console.log("Payment verification failed:", paymentResponse.data);
+            setOrderSuccess('Payment verification failed. Please try again.');
+          }
+        } else {
+          console.log("Payment initiation failed:", paymentResponse.data);
+          setOrderSuccess('Payment failed. Please try again.');
+        }
+      } else {
+        console.log("Order registration failed:", orderResponse.data);
+        setOrderSuccess('Failed to register order. Please try again.');
+      }
+    } catch (error) {
+      console.error("Error during process:", error.message);
+      setOrderSuccess('An error occurred. Please try again.');
+    }
+    
+    
+  };
+  
   return (
     <div>
       <div className="bg-secondary border-top p-4 text-white mb-3">
         <h1 className="display-6">Checkout</h1>
       </div>
+      {orderSuccess && <div className="alert">{orderSuccess}</div>}  
+
       <div className="container mb-3">
         <div className="row">
+          {/* Left column: Contact Info and Shipping Info */}
           <div className="col-md-8">
             <div className="card mb-3">
               <div className="card-header">
@@ -73,17 +198,21 @@ console.log(orderData)
                   <div className="col-md-6">
                     <input
                       type="email"
+                      name="email"
+                      value={contactInfo.email}
                       className="form-control"
                       placeholder="Email Address"
-                      aria-label="Email Address"
+                      onChange={handleContactChange}
                     />
                   </div>
                   <div className="col-md-6">
                     <input
                       type="tel"
+                      name="phone"
+                      value={contactInfo.phone}
                       className="form-control"
                       placeholder="Mobile no"
-                      aria-label="Mobile no"
+                      onChange={handleContactChange}
                     />
                   </div>
                 </div>
@@ -92,259 +221,107 @@ console.log(orderData)
 
             <div className="card mb-3">
               <div className="card-header">
-                <i className="bi bi-truck"></i> Shipping Infomation
+                <i className="bi bi-truck"></i> Shipping Information
               </div>
               <div className="card-body">
                 <div className="row g-3">
                   <div className="col-md-12">
                     <input
                       type="text"
+                      name="name"
+                      value={shippingInfo.name}
                       className="form-control"
                       placeholder="Name"
                       required
+                      onChange={handleShippingChange}
                     />
                   </div>
                   <div className="col-md-6">
                     <input
                       type="text"
+                      name="address"
+                      value={shippingInfo.address}
                       className="form-control"
-                      placeholder="Addresss"
+                      placeholder="Address"
                       required
+                      onChange={handleShippingChange}
                     />
                   </div>
                   <div className="col-md-6">
                     <input
                       type="text"
+                      name="city"
+                      value={shippingInfo.city}
                       className="form-control"
-                      placeholder="Address 2 (Optional)"
-                    />
-                  </div>
-                  <div className="col-md-4">
-                    <select className="form-select" required>
-                      <option value>-- Country --</option>
-                      <option>United States</option>
-                    </select>
-                  </div>
-                  <div className="col-md-4">
-                    <select className="form-select" required>
-                      <option value>-- State --</option>
-                      <option>California</option>
-                    </select>
-                  </div>
-                  <div className="col-md-4">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Zip"
+                      placeholder="City"
                       required
+                      onChange={handleShippingChange}
                     />
                   </div>
                 </div>
-              </div>
-            </div>
-
-            <div className="card mb-3">
-              <div className="card-header">
-                <i className="bi bi-receipt"></i> Billing Infomation
-                <div className="form-check form-check-inline ms-3">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    defaultValue
-                    id="flexCheckDefault"
-                  />
-                  <label
-                    className="form-check-label"
-                    htmlFor="flexCheckDefault"
-                  >
-                    Same as Shipping Infomation
-                  </label>
-                </div>
-              </div>
-              <div className="card-body">
-                <div className="row g-3">
-                  <div className="col-md-12">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Name"
-                      required
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Addresss"
-                      required
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Address 2 (Optional)"
-                    />
-                  </div>
-                  <div className="col-md-4">
-                    <select className="form-select" required>
-                      <option value>-- Country --</option>
-                      <option>United States</option>
-                    </select>
-                  </div>
-                  <div className="col-md-4">
-                    <select className="form-select" required>
-                      <option value>-- State --</option>
-                      <option>California</option>
-                    </select>
-                  </div>
-                  <div className="col-md-4">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Zip"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="card mb-3 border-info">
-              <div className="card-header bg-info">
-                <i className="bi bi-credit-card-2-front"></i> Payment Method
-              </div>
-              <div className="card-body">
-                <div className="row g-3 mb-3 border-bottom">
-                  <div className="col-md-6">
-                    <div className="form-check">
-                      <input
-                        id="credit"
-                        name="paymentMethod"
-                        type="radio"
-                        className="form-check-input"
-                        defaultChecked
-                        required
-                      />
-                      <label className="form-check-label" htmlFor="credit">
-                        Credit card
-                        <img
-                          src="../../images/payment/cards.webp"
-                          alt="..."
-                          className="ms-3"
-                          height={26}
-                        />
-                      </label>
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="form-check">
-                      <input
-                        id="paypal"
-                        name="paymentMethod"
-                        type="radio"
-                        className="form-check-input"
-                        required
-                      />
-                      <label className="form-check-label" htmlFor="paypal">
-                        PayPal
-                        <img
-                          src="../../images/payment/paypal_64.webp"
-                          alt="..."
-                          className="ms-3"
-                          height={26}
-                        />
-                      </label>
-                    </div>
-                  </div>
-                </div>
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Name on card"
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <input
-                      type="number"
-                      className="form-control"
-                      placeholder="Card number"
-                    />
-                  </div>
-                  <div className="col-md-4">
-                    <input
-                      type="number"
-                      className="form-control"
-                      placeholder="Expiration month"
-                    />
-                  </div>
-                  <div className="col-md-4">
-                    <input
-                      type="number"
-                      className="form-control"
-                      placeholder="Expiration year"
-                    />
-                  </div>
-                  <div className="col-md-4">
-                    <input
-                      type="number"
-                      className="form-control"
-                      placeholder="CVV"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="card-footer border-info d-grid">
-                <button type="button" className="btn btn-info">
-                  Pay Now <strong>$162</strong>
-                </button>
               </div>
             </div>
           </div>
-          <div className="col-md-4">
-            <div className="card">
-              <div className="card-header">
-                <i className="bi bi-cart3"></i> Cart{" "}
-                <span className="badge bg-secondary float-end">3</span>
-              </div>
-              <ul className="list-group list-group-flush">
-  {cart.map((item) => (
-    <li
-      key={item._id}
-      className="list-group-item d-flex justify-content-between lh-sm"
-    >
-      <div>
-        <h6 className="my-0">{item.name}</h6>
-        <small className="text-muted">
-          {item.description || "No description available"}
-        </small>
-      </div>
-      <span className="text-muted">
-        ${(item.price * item.quantity).toFixed(2)}
-      </span>
-    </li>
- 
-  // <li className="list-group-item d-flex justify-content-between bg-light">
-  //   <div className="text-success">
-  //     <h6 className="my-0">Promo code</h6>
-  //     <small>EXAMPLECODE</small>
-  //   </div>
-  //   <span className="text-success">−$50</span>
-  // </li>
 
-  // {/* Total Amount */}
-  // <li className="list-group-item d-flex justify-content-between">
-  //   <span>Total (USD)</span>
-  //   <strong>${item.total_quantity}</strong>
-  // </li>
-  ))}
-
-</ul>
-            </div>
-          </div>
+          {/* Right column: Product Details and Order Summary */}
         </div>
+          <div className="">
+            <div className="card shadow-lg border-0">
+              <div className="card-header bg-primary text-white">
+                <i className="bi bi-check-circle"></i> Order Summary
+              </div>
+              <div className="card-body p-4">
+                {loading ? (
+                  <p>Loading product details...</p>
+                ) : error ? (
+                  <div className="alert alert-danger">{error}</div>
+                ) : (
+                  <div>
+                    <h5 className="text-xl font-semibold mb-3">Product Details:</h5>
+                    <table className="table table-striped table-bordered">
+                      <thead>
+                        <tr>
+                          <th>Product Name</th>
+                          <th>Price</th>
+                          <th>Quantity</th>
+                          <th>Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {orderData.items.map((item, index) => (
+                          <tr key={index}>
+                            <td>{productDetails?.name}</td>
+                            <td>${productDetails?.price.toFixed(2)}</td>
+                            <td>{item.quantity}</td>
+                            <td>${(productDetails?.price * item.quantity).toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+
+                    <div className="mt-4">
+                      <h5 className="text-lg font-semibold">Contact Info:</h5>
+                      <p>Email: {contactInfo.email}</p>
+                      <p>Phone: {contactInfo.phone}</p>
+
+                      <h5 className="text-lg font-semibold mt-3">Shipping Info:</h5>
+                      <p>Name: {shippingInfo.name}</p>
+                      <p>Address: {shippingInfo.address}</p>
+                      <p>City: {shippingInfo.city}</p>
+
+                      <dl className="row mb-0">
+                        <dt className="col-6 text-sm">Total:</dt>
+                        <dd className="col-6 text-end text-lg font-bold">${calculateTotal()}</dd>
+                      </dl>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="card-footer bg-light text-end">
+                <button className="btn btn-primary w-100 py-2" onClick={handlePlaceOrder}>Place Order</button>
+              </div>
+            </div>
+          </div>
       </div>
     </div>
   );

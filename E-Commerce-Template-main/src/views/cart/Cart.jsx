@@ -126,7 +126,7 @@ const CartView = () => {
               <div className="card-footer">
                 <Link
                   to="/checkout"
-                  state={prepareOrderData()}
+                  state={prepareOrderData()}  // Pass the cart data directly to the checkout component
                   className="btn btn-primary float-end"
                 >
                   Make Purchase <i className="bi bi-chevron-right"></i>
