@@ -49,9 +49,9 @@ class MyProfileView extends Component {
           {/* Profile Section */}
           <div className="col-lg-4">
             <div className="card">
-              <div className="card-header bg-primary text-white text-center">
+              {/* <div className="card-header bg-primary text-white text-center">
                 <h5>Profile Information</h5>
-              </div>
+              </div> */}
               <div className="card-body">
                 <ProfileForm
                   onSubmit={this.onSubmitProfile}

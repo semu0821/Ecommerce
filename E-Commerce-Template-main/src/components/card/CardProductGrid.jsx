@@ -1,17 +1,22 @@
-// CardProductGrid.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-const CardProductGrid = ({ data, onWishlistToggle }) => {
-  const [isInWishlist, setIsInWishlist] = useState(false);
+const CardProductGrid = ({ data, onWishlistToggle, isInWishlistProp }) => {
+  const [isInWishlist, setIsInWishlist] = useState(isInWishlistProp);
+
+  useEffect(() => {
+    // Update local state if the isInWishlistProp changes
+    setIsInWishlist(isInWishlistProp);
+  }, [isInWishlistProp]);
 
   const handleWishlistToggle = () => {
-    setIsInWishlist(!isInWishlist);
-    onWishlistToggle(data._id, !isInWishlist); // Call parent method to update the wishlist
+    const newWishlistState = !isInWishlist;
+    setIsInWishlist(newWishlistState);
+    onWishlistToggle(data._id, newWishlistState); // Notify parent to update wishlist
   };
 
   return (
     <div className="card">
-      <img src={data.image_url} className="card-img-top" alt={data.name} />
+      <img src={data.image} className="card-img-top" alt={data.name} />
       <div className="card-body">
         <h5 className="card-title">{data.name}</h5>
         <p className="card-text">{data.description}</p>

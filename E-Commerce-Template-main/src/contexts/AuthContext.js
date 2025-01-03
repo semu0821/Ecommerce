@@ -1,12 +1,22 @@
 // src/contexts/AuthContext.js
 import React, { createContext, useState, useEffect } from "react";
 import axios from "axios";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null); // Store user information
   const [loading, setLoading] = useState(false); // Loading state for requests
+
+  // Check if a user is already logged in on component mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser)); // Set user from localStorage if it exists
+    }
+  }, []);
 
   // Login function
   const login = async (email, password) => {
@@ -16,22 +26,25 @@ export const AuthProvider = ({ children }) => {
       const userData = response.data; // Assuming server returns user data
       setUser(userData);
       localStorage.setItem("user", JSON.stringify(userData)); // Save user in local storage
-  
+
       // Display success message
-      alert("User logged in successfully!");
+      toast.success("User logged in successfully!", {
+        position: "top-left",
+        autoClose: 5000, // Closes automatically after 3 seconds
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
     } catch (error) {
-      //console.error("Login failed:", error.response?.data || error.message);
-  
-      // Display error message from the server or fallback message
       const errorMessage = error.response?.data?.message || "Login failed. Please check your credentials.";
       alert(errorMessage);
-  
       throw error; // Optionally propagate the error
     } finally {
       setLoading(false);
     }
   };
-  
 
   // Signup function
   const signup = async (formData) => {
@@ -52,7 +65,7 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("user");
+    localStorage.removeItem("user"); // Remove user from localStorage
   };
 
   return (

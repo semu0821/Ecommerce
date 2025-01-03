@@ -131,40 +131,43 @@ const CheckoutView = () => {
       total_price: calculateTotal(),
       status: 'pending',
     };
-
+  
     try {
       // Step 1: Register the order
       const orderResponse = await axios.post('https://modestserver.onrender.com/api/orders', orderSummary);
-
+  
       if (orderResponse.status === 201) {
         console.log("Order registered successfully:", orderResponse.data);
         const orderId = orderResponse.data.id; // Get the order ID from the response
-
+      const {order} = orderResponse.data
         // Step 2: Proceed to payment
         const paymentResponse = await axios.post('https://modestserver.onrender.com/api/pay', { orderSummary });
-
+  
         if (paymentResponse.status === 200) {
           const checkoutUrl = paymentResponse.data.checkout_url;
           window.location.href = checkoutUrl; // Redirect to the payment gateway
+  
+          // After payment verification
+          setOrderSuccess('Order placed and payment verified successfully!');
+          const updatedOrderSummary = {
+            ...orderSummary,
+            invoice_number: order.invoice_number,
+          };
+       
+  
+          localStorage.removeItem('cart');
+          localStorage.setItem("invoice", JSON.stringify(updatedOrderSummary ));
+          // Ensure that the navigation to the invoice page works
+          // console.log("Navigating to Invoice page...");
+          // navigate("/invoice", { state: orderData }); 
+          // // Immediate navigation
+          // navigate("/invoice", { state: orderSummary });
 
-
-          // Step 3: Handle payment verification
-          if (paymentResponse.status === 200) {
-            console.log("Payment verified successfully:", paymentResponse.data);
-
-            // Update the order status or inform the user of success
-            setOrderSuccess('Order placed and payment verified successfully!');
-            // setTimeout(() => {
-            //   // Redirect to invoice or dashboard
-            //   navigate('/invoice');
-            // }, 2000);
-          } else {
-            console.log("Payment verification failed:", paymentResponse.data);
-            setOrderSuccess('Payment verification failed. Please try again.');
-          }
+          // localStorage.removeItem('cart');
+  
         } else {
-          console.log("Payment initiation failed:", paymentResponse.data);
-          setOrderSuccess('Payment failed. Please try again.');
+          console.log("Payment verification failed:", paymentResponse.data);
+          setOrderSuccess('Payment verification failed. Please try again.');
         }
       } else {
         console.log("Order registration failed:", orderResponse.data);
@@ -174,10 +177,8 @@ const CheckoutView = () => {
       console.error("Error during process:", error.message);
       setOrderSuccess('An error occurred. Please try again.');
     }
-
-
   };
-
+  
   return (
     <div>
       <div className="bg-secondary border-top p-4 text-white mb-3">

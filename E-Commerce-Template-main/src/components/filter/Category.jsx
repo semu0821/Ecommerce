@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-const Category = () => {
+const Category = ({ onChange, categoryId }) => {
   const [categories, setCategories] = useState([]);
-  const [filteredCategories, setFilteredCategories] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -12,9 +12,10 @@ const Category = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get("https://modestserver.onrender.com/api/categories/subcategory");
+        const response = await axios.get(
+          `https://modestserver.onrender.com/api/categories/main/${categoryId}`
+        );
         setCategories(response.data);
-        setFilteredCategories(response.data); // Initialize filtered categories
         setLoading(false);
       } catch (err) {
         console.error("Error fetching categories: ", err);
@@ -24,21 +25,24 @@ const Category = () => {
     };
 
     fetchCategories();
-  }, []);
+  }, [categoryId]);
 
   // Filter categories based on search term
-  useEffect(() => {
-    if (searchTerm) {
-      const lowerCaseSearchTerm = searchTerm.toLowerCase();
-      setFilteredCategories(
-        categories.filter((category) =>
-          category.name.toLowerCase().includes(lowerCaseSearchTerm)
-        )
-      );
-    } else {
-      setFilteredCategories(categories); // Reset to full list if no search term
-    }
-  }, [searchTerm, categories]);
+  const filteredCategories = categories.filter((category) =>
+    category.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Handle checkbox selection
+  const handleCheckboxChange = (category) => {
+    const isSelected = selectedCategories.includes(category);
+
+    const newSelectedCategories = isSelected
+      ? selectedCategories.filter((selected) => selected !== category)
+      : [...selectedCategories, category];
+
+    setSelectedCategories(newSelectedCategories);
+    onChange(newSelectedCategories); // Pass selected categories to the parent
+  };
 
   if (loading) return <div>Loading categories...</div>;
   if (error) return <div>{error}</div>;
@@ -69,14 +73,23 @@ const Category = () => {
         id="filterCategory"
       >
         {filteredCategories.length > 0 ? (
-          filteredCategories.map((category, index) => (
-            <li key={index} className="list-group-item">
-              <button
-                onClick={() => console.log("Category selected: ", category)}
-                className="btn btn-link text-decoration-none text-start stretched-link"
-              >
-                {category.name}
-              </button>
+          filteredCategories.map((category) => (
+            <li key={category.id} className="list-group-item">
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id={`categoryCheckbox${category.id}`}
+                  checked={selectedCategories.includes(category.name)}
+                  onChange={() => handleCheckboxChange(category.name)}
+                />
+                <label
+                  className="form-check-label"
+                  htmlFor={`categoryCheckbox${category.id}`}
+                >
+                  {category.name}
+                </label>
+              </div>
             </li>
           ))
         ) : (
