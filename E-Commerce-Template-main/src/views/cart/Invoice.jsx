@@ -1,149 +1,154 @@
-/* eslint-disable jsx-a11y/anchor-is-valid */
-import { ReactComponent as IconBootstrapFill } from "bootstrap-icons/icons/bootstrap-fill.svg";
+import React from 'react';
+import html2pdf from 'html2pdf.js'; // Import the library
 
 const Invoice = () => {
+  const invoiceData = JSON.parse(localStorage.getItem("invoice"));
+  console.log(invoiceData);
+
+  if (!invoiceData) {
+    return <div>Loading or error: No order data found</div>;
+  }
+
+  const calculateTotal = () => {
+    if (!invoiceData?.items) {
+      return 0;
+    }
+    return invoiceData.items
+      .reduce((total, item) => total + item.price * item.quantity, 0)
+      .toFixed(2);
+  };
+
+  const calculateTax = (total) => {
+    return (total * 0.1).toFixed(2);
+  };
+
+  const subTotal = parseFloat(calculateTotal()) || 0;
+  const tax = calculateTax(subTotal);
+  const total = (subTotal + parseFloat(tax)).toFixed(2);
+
+  const handleDownload = () => {
+    const invoiceElement = document.getElementById('invoice');
+    html2pdf()
+      .from(invoiceElement)
+      .save('invoice.pdf');
+  };
+
+  const handlePrint = () => {
+    const originalContents = document.body.innerHTML;
+    const printContents = document.getElementById('invoice').innerHTML;
+
+    document.body.innerHTML = printContents;
+    window.print();
+    document.body.innerHTML = originalContents;
+
+    window.location.reload(); // Reload the page to restore the original content
+  };
+
   return (
-    <div className="container-fluid bg-secondary p-3">
-      <div className="bg-white p-5">
-        <div>
-          <div className="row g-3 mb-3 pb-3 border-bottom">
-            <div className="col-6">
-              <IconBootstrapFill width={64} height={64} />
-            </div>
-            <div className="col-6 d-flex justify-content-end">
-              <span className="display-4">Invoice</span>
-            </div>
+    <div className="container py-5">
+      <style>
+        {`
+        @media print {
+          body * {
+            display: none !important; /* Hide all elements by default */
+          }
+          #invoice, #invoice * {
+            display: block !important; /* Show the invoice section */
+          }
+        }
+        `}
+      </style>
+      <div className="card shadow-sm border-0 p-4" id="invoice">
+        <div
+          className="card-header text-white d-flex align-items-center justify-content-between"
+          style={{
+            background: 'linear-gradient(to right, rgb(2, 98, 125), rgb(2, 98, 125))',
+          }}
+        >
+          <div>
+            <img
+              src="/images/banner/Webp.net-resizeimage-removebg-preview.png"
+              alt="Invoice Banner"
+              className="img-fluid"
+            />
           </div>
-          <div className="row mb-3 pb-3 border-bottom">
-            <div className="col-6">
-              <b className="me-1">Invoice Date:</b>{" "}
-              {new Date(Date.now()).toLocaleDateString()}
-            </div>
-            <div className="col-6 d-flex justify-content-end">
-              <b className="me-1">Invoice No:</b> {`#1234567890`}
-            </div>
-          </div>
+          <div className="h4 mb-0">Invoice</div>
+        </div>
+        <div className="card-body">
           <div className="row mb-3">
             <div className="col-6">
-              <b className="border-bottom d-block">From</b>
-              <address>
-                <strong>Twitter, Inc.</strong>
-                <br />
-                1355 Market St, Suite 900
-                <br />
-                San Francisco, CA 94103
-                <br />
-                <abbr title="Phone">P:</abbr> (123) 456-7890
-              </address>
+              <b>Invoice Date:</b> {new Date(Date.now()).toLocaleDateString()}
             </div>
-            <div className="col-6 text-sm-end">
-              <b className="border-bottom d-block">To</b>
+            <div className="col-6 text-right">
+              <b>Invoice No:</b> {`#${invoiceData?.invoice_number || 'N/A'}`}
+            </div>
+          </div>
+          <div className="row mb-4">
+            <div className="col-md-6 text-right">
+              <b className="d-block">To:</b>
               <address>
-                <strong>Twitter, Inc.</strong>
+                <strong>{invoiceData?.user?.name || 'N/A'}</strong>
                 <br />
-                1355 Market St, Suite 900
+                {invoiceData?.shippingInfo?.address || 'N/A'}
                 <br />
-                San Francisco, CA 94103
+                {invoiceData?.shippingInfo?.city || 'N/A'}
                 <br />
-                <abbr title="Phone">P:</abbr> (123) 456-7890
+                <abbr title="Phone"></abbr> {invoiceData?.user?.phone || 'N/A'}
               </address>
             </div>
           </div>
-          <div className="card">
-            <div className="card-body p-0">
-              <div className="table-responsive">
-                <table className="table mb-0">
-                  <thead className="card-header">
-                    <tr>
-                      <td className="col-3">
-                        <strong>Peoduct</strong>
-                      </td>
-                      <td className="col-4">
-                        <strong>Description</strong>
-                      </td>
-                      <td className="col-2 text-center">
-                        <strong>Rate</strong>
-                      </td>
-                      <td className="col-1 text-center">
-                        <strong>QTY</strong>
-                      </td>
-                      <td className="col-2 text-end">
-                        <strong>Amount</strong>
-                      </td>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td className="col-3">T-shirts</td>
-                      <td className="col-4 text-1">
-                        Maecenas suscipit volutpat gravida. Nulla hendrerit nisi
-                        a lectus blandit aliquam. Integer enim magna, consequat
-                        sed justo nec, auctor sagittis urna.
-                      </td>
-                      <td className="col-2 text-center">$50.00</td>
-                      <td className="col-1 text-center">10</td>
-                      <td className="col-2 text-end">$500.00</td>
-                    </tr>
-                    <tr>
-                      <td>Sweater</td>
-                      <td className="text-1">
-                        Nulla sodales sit amet orci eu vehicula.
-                      </td>
-                      <td className="text-center">$120.00</td>
-                      <td className="text-center">10</td>
-                      <td className="text-end">$1200.00</td>
-                    </tr>
-                    <tr>
-                      <td>Jeans</td>
-                      <td className="text-1">A pair of nice jeans</td>
-                      <td className="text-center">$450.00</td>
-                      <td className="text-center">1</td>
-                      <td className="text-end">$450.00</td>
-                    </tr>
-                  </tbody>
-                  <tfoot className="card-footer">
-                    <tr>
-                      <td colSpan="4" className="text-end">
-                        <strong>Sub Total:</strong>
-                      </td>
-                      <td className="text-end">$2150.00</td>
-                    </tr>
-                    <tr>
-                      <td colSpan="4" className="text-end">
-                        <strong>Tax:</strong>
-                      </td>
-                      <td className="text-end">$215.00</td>
-                    </tr>
-                    <tr>
-                      <td colSpan="4" className="text-end border-bottom-0">
-                        <strong>Total:</strong>
-                      </td>
-                      <td className="text-end border-bottom-0">$2365.00</td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </div>
+          <div className="table-responsive mb-4">
+            <table className="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Description</th>
+                  <th className="text-center">Rate</th>
+                  <th className="text-center">QTY</th>
+                  <th className="text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invoiceData?.items?.map((item, index) => (
+                  <tr key={index}>
+                    <td>{item.product}</td>
+                    <td>{item.description}</td>
+                    <td className="text-center">${item.price.toFixed(2)}</td>
+                    <td className="text-center">{item.quantity}</td>
+                    <td className="text-right">${(item.price * item.quantity).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colSpan="4" className="text-right">
+                    <strong>Sub Total:</strong>
+                  </td>
+                  <td className="text-right">${subTotal}</td>
+                </tr>
+                <tr>
+                  <td colSpan="4" className="text-right">
+                    <strong>Tax (10%):</strong>
+                  </td>
+                  <td className="text-right">${tax}</td>
+                </tr>
+                <tr>
+                  <td colSpan="4" className="text-right">
+                    <strong>Total:</strong>
+                  </td>
+                  <td className="text-right">${total}</td>
+                </tr>
+              </tfoot>
+            </table>
           </div>
-          <div className="text-center mt-4">
-            <p className="text-1">
-              <strong>NOTE :</strong> This is computer generated receipt and
-              does not require physical signature.
-            </p>
-            <div className="btn-group btn-group-sm d-print-none">
-              <a
-                // eslint-disable-next-line no-script-url
-                href="javascript:window.print()"
-                className="btn btn-light border text-black-50 shadow-none"
-              >
+          <div className="text-center mt-3">
+            <div className="btn-group btn-group-sm">
+              <button onClick={handlePrint} className="btn btn-outline-secondary">
                 <i className="bi bi-printer"></i> Print
-              </a>
-              <a
-                href="!#"
-                className="btn btn-light border text-black-50 shadow-none"
-              >
+              </button>
+              <button onClick={handleDownload} className="btn btn-outline-secondary">
                 <i className="bi bi-download"></i> Download
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -151,4 +156,5 @@ const Invoice = () => {
     </div>
   );
 };
+
 export default Invoice;

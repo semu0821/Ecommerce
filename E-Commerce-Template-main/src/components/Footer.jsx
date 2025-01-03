@@ -2,143 +2,131 @@ import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
-    <footer>
-      <div className="container-fluid bg-white">
-        <div className="row ">
-          <div className="col-md-9 py-3 text-white">
-           
-          </div>
-          <div className="col-md-3 py-3 text-center text-dark">
-            <Link to="/" title="Apple">
-              <i className="bi bi-apple text-dark me-3"></i>
-            </Link>
-            <Link to="/" title="Windows">
-              <i className="bi bi-windows text-dark me-3"></i>
-            </Link>
-            <Link to="/" title="Android">
-              <i className="bi bi-android2 text-dark me-3"></i>
-            </Link>
-            |
-            <Link to="/" title="Twitter">
-              <i className="bi bi-twitter-x text-dark ms-3 me-3"></i>
-            </Link>
-            <Link to="/" title="Facebook">
-              <i className="bi bi-facebook text-dark me-3"></i>
-            </Link>
-            <Link to="/" title="Instagram">
-              <i className="bi bi-instagram text-dark me-3"></i>
-            </Link>
-            <Link to="/" title="Youtube">
-              <i className="bi bi-youtube text-dark me-3"></i>
-            </Link>
-          </div>
+    <footer
+      className="container-fluid"
+      style={{
+        background: "linear-gradient(white)", // Gradient for the entire footer background
+      }}
+    >
+      <div className="row">
+        {/* Social Media Section - No background change */}
+        <div className="col-md-9 py-3 text-white">
+          {/* This section can be left empty or customized further */}
+        </div>
+        <div className="col-md-3 py-3 text-center text-dark">
+          <Link to="/" title="Apple">
+            <i className="bi bi-apple text-dark me-3"></i>
+          </Link>
+          <Link to="/" title="Windows">
+            <i className="bi bi-windows text-dark me-3"></i>
+          </Link>
+          <Link to="/" title="Android">
+            <i className="bi bi-android2 text-dark me-3"></i>
+          </Link>
+          |
+          <Link to="/" title="Twitter">
+            <i className="bi bi-twitter-x text-dark ms-3 me-3"></i>
+          </Link>
+          <Link to="/" title="Facebook">
+            <i className="bi bi-facebook text-dark me-3"></i>
+          </Link>
+          <Link to="/" title="Instagram">
+            <i className="bi bi-instagram text-dark me-3"></i>
+          </Link>
+          <Link to="/" title="Youtube">
+            <i className="bi bi-youtube text-dark me-3"></i>
+          </Link>
         </div>
       </div>
-      <div className="container-fluid bg-dark text-white">
-        <div className="row ">
+
+      {/* Footer Content Section with different background */}
+      <div
+        className="container-fluid text-white"
+        style={{
+          background: "linear-gradient(to right, rgb(0, 7, 8), rgb(42, 198, 242))", // Set a solid background color for the footer content section
+        }}
+      >
+        <div className="row">
           <div className="col-md-3 py-3">
             <div className="h6">Company Name</div>
             <hr />
             <p>
-              Lorem Ipsum is simply dummy text of the printing and typesetting
-              industry. Lorem Ipsum has been the industry's standard dummy text
-              ever since the 1500s, when an unknown printer took a galley of
-              type and scrambled it to make a type specimen book.
+              This e-commerce company has been at the forefront of online retail,
+              offering a wide range of products to customers globally. With a
+              commitment to innovation and exceptional customer service, it continues
+              to set the standard for the industry, evolving since its inception to
+              meet the dynamic needs of a digital world.
             </p>
           </div>
+
+          {/* Products Section */}
           <div className="col-md-3 py-3">
             <div className="h6">Products</div>
             <hr />
             <ul className="list-group list-group-flush">
               <li className="list-group-item bg-dark text-white border-dark">
-                <Link
-                  to="/"
-                  className="text-decoration-none text-white stretched-link"
-                >
-                  Electronics
+                <Link to="/" className="text-decoration-none text-white stretched-link">
+                  Clothes
                 </Link>
               </li>
               <li className="list-group-item bg-dark text-white border-dark">
-                <Link
-                  to="/"
-                  className="text-decoration-none text-white stretched-link"
-                >
-                  Mobiles
+                <Link to="/" className="text-decoration-none text-white stretched-link">
+                  Home Accessories
                 </Link>
               </li>
               <li className="list-group-item bg-dark text-white border-dark">
-                <Link
-                  to="/"
-                  className="text-decoration-none text-white stretched-link"
-                >
-                  Car & bike
+                <Link to="/" className="text-decoration-none text-white stretched-link">
+                  Home Materials
                 </Link>
               </li>
               <li className="list-group-item bg-dark text-white border-dark">
-                <Link
-                  to="/"
-                  className="text-decoration-none text-white stretched-link"
-                >
-                  Super Market
+                <Link to="/" className="text-decoration-none text-white stretched-link">
+                  Car Accessories
                 </Link>
               </li>
               <li className="list-group-item bg-dark text-white border-dark">
-                <Link
-                  to="/"
-                  className="text-decoration-none text-white stretched-link"
-                >
+                <Link to="/" className="text-decoration-none text-white stretched-link">
                   Travel Cards
                 </Link>
               </li>
             </ul>
           </div>
+
+          {/* Policy Section */}
           <div className="col-md-3 py-3">
             <div className="h6">Policy</div>
             <hr />
             <ul className="list-group list-group-flush">
               <li className="list-group-item bg-dark text-white border-dark">
-                <Link
-                  to="/"
-                  className="text-decoration-none text-white stretched-link"
-                >
+                <Link to="/" className="text-decoration-none text-white stretched-link">
                   Return Policy
                 </Link>
               </li>
               <li className="list-group-item bg-dark text-white border-dark">
-                <Link
-                  to="/"
-                  className="text-decoration-none text-white stretched-link"
-                >
+                <Link to="/" className="text-decoration-none text-white stretched-link">
                   Terms Of Use
                 </Link>
               </li>
               <li className="list-group-item bg-dark text-white border-dark">
-                <Link
-                  to="/"
-                  className="text-decoration-none text-white stretched-link"
-                >
+                <Link to="/" className="text-decoration-none text-white stretched-link">
                   Security
                 </Link>
               </li>
               <li className="list-group-item bg-dark text-white border-dark">
-                <Link
-                  to="/"
-                  className="text-decoration-none text-white stretched-link"
-                >
+                <Link to="/" className="text-decoration-none text-white stretched-link">
                   Privacy
                 </Link>
               </li>
               <li className="list-group-item bg-dark text-white border-dark">
-                <Link
-                  to="/"
-                  className="text-decoration-none text-white stretched-link"
-                >
+                <Link to="/" className="text-decoration-none text-white ">
                   EPR Compliance
                 </Link>
               </li>
             </ul>
           </div>
-          <div className="col-md-3 py-3">
+
+          {/* Address and Customer Care Section */}
+          {/* <div className="col-md-3 py-3">
             <div className="h6">Address</div>
             <hr />
             <address>
@@ -155,13 +143,11 @@ const Footer = () => {
             <i className="bi bi-telephone"></i> +1800 100 1000
             <br />
             <i className="bi bi-envelope"></i> info@email.com
-          </div>
+          </div> */}
         </div>
       </div>
-     
-       
-      
     </footer>
   );
 };
+
 export default Footer;

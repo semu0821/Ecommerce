@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { calcLength } from "framer-motion";
 
-const Category = () => {
+const Category = ({ onCategoryFilterChange, categoryName, categoryId }) => {
+  console.log(categoryName); // Log to ensure categoryName is passed correctly
+  console.log(categoryId);   // Log to ensure categoryId is passed correctly
+
   const [categories, setCategories] = useState([]);
   const [filteredCategories, setFilteredCategories] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -12,7 +16,7 @@ const Category = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get("https://modestserver.onrender.com/api/categories/subcategory");
+        const response = await axios.get(`https://modestserver.onrender.com/api/categories/main/${categoryId}`);
         setCategories(response.data);
         setFilteredCategories(response.data); // Initialize filtered categories
         setLoading(false);
@@ -24,7 +28,7 @@ const Category = () => {
     };
 
     fetchCategories();
-  }, []);
+  }, [categoryId]);
 
   // Filter categories based on search term
   useEffect(() => {
@@ -72,7 +76,7 @@ const Category = () => {
           filteredCategories.map((category, index) => (
             <li key={index} className="list-group-item">
               <button
-                onClick={() => console.log("Category selected: ", category)}
+                onClick={() => onCategoryFilterChange(category, category.name, category.id)} // Call the callback with category info
                 className="btn btn-link text-decoration-none text-start stretched-link"
               >
                 {category.name}
@@ -86,5 +90,4 @@ const Category = () => {
     </div>
   );
 };
-
 export default Category;

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Field, reduxForm } from "redux-form";
 import { compose } from "redux";
 import renderFormGroupField from "../../helpers/renderFormGroupField";
@@ -25,102 +25,111 @@ const ProfileForm = (props) => {
     submitFailed,
     onImageChange,
     imagePreview,
+    initialize,
+    userData,
   } = props;
+
+  useEffect(() => {
+    if (userData) {
+      initialize({
+        name: userData.name || "",
+        mobileNo: userData.phone_number || "",
+        email: userData.email || "",
+        role: userData.role || "",
+        createdAt: userData.createdAt || "",
+      });
+    }
+  }, [userData, initialize]);
+
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
       className={`needs-validation ${submitFailed ? "was-validated" : ""}`}
       noValidate
     >
-      <div className="card border-primary">
-        <h6 className="card-header">
-          <i className="bi bi-person-lines-fill" /> Profile Detail
-        </h6>
-        <img
-          src={imagePreview ? imagePreview : "../../images/NO_IMG.png"}
-          alt=""
-          className="card-img-top rounded-0 img-fluid bg-secondary"
-        />
-        <div className="card-body">
-          <Field
-            name="formFile"
-            component={renderFormFileInput}
-            onImageChange={onImageChange}
-            validate={[required]}
-            tips="You don't allow uploading a photo more than 5MB"
-          />
-          <p className="card-text">
-            With supporting text below as a natural lead-in to additional
-            content.
-          </p>
+      <div className="card border-0 shadow rounded-3">
+        <div className="card-header bg-primary text-white text-center py-3">
+          <h4 className="mb-0">Edit Profile</h4>
         </div>
-        <ul className="list-group list-group-flush">
-          <li className="list-group-item">
-            <Field
-              name="name"
-              type="text"
-              component={renderFormGroupField}
-              placeholder="Your name"
-              icon={IconPerson}
-              validate={[required, name]}
-              required={true}
-            />
-          </li>
-          <li className="list-group-item">
-            <Field
-              name="mobileNo"
-              type="number"
-              component={renderFormGroupField}
-              placeholder="Mobile no without country code"
-              icon={IconPhone}
-              validate={[required, maxLengthMobileNo, minLengthMobileNo, digit]}
-              required={true}
-              max="999999999999999"
-              min="9999"
-            />
-          </li>
-          <li className="list-group-item">
-            <Field
-              name="email"
-              type="email"
-              component={renderFormGroupField}
-              placeholder="Your email"
-              icon={IconEnvelop}
-              validate={[required, email]}
-              required={true}
-            />
-          </li>
-          <li className="list-group-item">
-            <Field
-              name="location"
-              type="text"
-              component={renderFormGroupField}
-              placeholder="Your location"
-              icon={IconGeoAlt}
-              validate={[required]}
-              required={true}
-            />
-          </li>
-          <li className="list-group-item">
-            <Field
-              name="dob"
-              type="date"
-              component={renderFormGroupField}
-              placeholder="Your birthdate"
-              icon={IconCalendarEvent}
-              validate={[required]}
-              required={true}
-            />
-          </li>
-        </ul>
         <div className="card-body">
-          <button
-            type="submit"
-            className="btn btn-primary  d-flex"
-            disabled={submitting}
-          >
-            Submit
-          </button>
+          {/* Profile Picture */}
+          <div className="text-center mb-4">
+            <img
+              src={imagePreview || "../../images/NO_IMG.png"}
+              alt="Profile"
+              className="rounded-circle img-fluid shadow-sm"
+              style={{ width: "120px", height: "120px", objectFit: "cover" }}
+            />
+            <Field
+              name="formFile"
+              component={renderFormFileInput}
+              onImageChange={onImageChange}
+              validate={[required]}
+              className="mt-2"
+              tips="Upload a photo (max 5MB)"
+            />
+          </div>
+
+          {/* Input Fields */}
+          <Field
+            name="name"
+            type="text"
+            component={renderFormGroupField}
+            label="Name"
+            icon={IconPerson}
+            validate={[required, name]}
+            placeholder="Enter your name"
+            required
+          />
+          <Field
+            name="mobileNo"
+            type="number"
+            component={renderFormGroupField}
+            label="Phone Number"
+            icon={IconPhone}
+            validate={[required, maxLengthMobileNo, minLengthMobileNo, digit]}
+            placeholder="Enter your phone number"
+            required
+          />
+          <Field
+            name="email"
+            type="email"
+            component={renderFormGroupField}
+            label="Email"
+            icon={IconEnvelop}
+            validate={[required, email]}
+            placeholder="Enter your email address"
+            required
+          />
+          <Field
+            name="role"
+            type="text"
+            component={renderFormGroupField}
+            label="Role"
+            icon={IconGeoAlt}
+            placeholder="Role"
+            disabled
+          />
+          <Field
+            name="createdAt"
+            type="text"
+            component={renderFormGroupField}
+            label="Account Created At"
+            icon={IconCalendarEvent}
+            placeholder="Date"
+            disabled
+          />
+
+          {/* Submit Button */}
+          <div className="d-grid mt-4">
+            <button
+              type="submit"
+              className="btn btn-primary btn-lg"
+              disabled={submitting}
+            >
+              Save Changes
+            </button>
+          </div>
         </div>
       </div>
     </form>
@@ -130,5 +139,6 @@ const ProfileForm = (props) => {
 export default compose(
   reduxForm({
     form: "profile",
+    enableReinitialize: true,
   })
 )(ProfileForm);

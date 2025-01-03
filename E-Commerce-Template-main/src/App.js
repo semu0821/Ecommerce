@@ -4,11 +4,14 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.js";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import TopMenu from "./components/TopMenu";
-import Header from './components/Header';
+// import Header from './components/Header';
 import Footer from "./components/Footer";
 import { AuthProvider } from "./contexts/AuthContext"; // Import AuthProvider
 import { SearchProvider } from "./contexts/SearchContext"; // Import SearchProvider
 import "./App.min.css";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 
 // Lazy-loaded components
 const HomeView = lazy(() => import("./views/Home"));
@@ -39,7 +42,7 @@ function App() {
       <SearchProvider> {/* Wrap SearchProvider around your app */}
         <BrowserRouter>
           <React.Fragment>
-            <Header />
+            {/* <Header /> */}
             <TopMenu />
             <Suspense fallback={<div className="text-white text-center mt-3">Loading...</div>}>
               <Routes>
@@ -51,8 +54,8 @@ function App() {
                 <Route exact path="/account/orders" element={<OrdersView />} />
                 <Route exact path="/account/wishlist" element={<WishlistView />} />
                 <Route exact path="/account/notification" element={<NotificationView />} />
-                <Route exact path="/category/clothing" element={<ProductListView />} />
-                <Route exact path="/category/accessories" element={<ProductListView />} />
+                <Route exact path="/category/products" element={<ProductListView />} />
+                {/* <Route exact path="/category/accessories" element={<ProductListView />} /> */}
                 <Route exact path="/product/:productId" element={<ProductDetailView />} />
                 <Route exact path="/star/zone" element={<StarZoneView />} />
                 <Route exact path="/cart" element={<CartView />} />
