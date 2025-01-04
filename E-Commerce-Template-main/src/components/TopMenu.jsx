@@ -121,6 +121,9 @@ const TopMenu = () => {
                       <Dropdown.Item as={Link} to="/account/Wishlist">
                         Wishlist
                       </Dropdown.Item>
+                      <Dropdown.Item as={Link} to="/account/orders">
+                        Orders
+                      </Dropdown.Item>
                       <Dropdown.Item onClick={handleLogout}>
                         Logout
                       </Dropdown.Item>
