@@ -1,6 +1,5 @@
 import { useState, useEffect, useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-
 import axios from "axios";
 import { AuthContext } from "../../contexts/AuthContext";
 
@@ -9,9 +8,7 @@ const CheckoutView = () => {
   const [productDetails, setProductDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const { user } = useContext(AuthContext);
-  console.log(user)
   const [contactInfo, setContactInfo] = useState({
     email: user?.user?.email || "",
     phone: user?.user?.phone_number || "",
@@ -20,28 +17,33 @@ const CheckoutView = () => {
     name: user?.user?.name || "",
     address: "",
     city: "",
-  });
-  const [orderSuccess, setOrderSuccess] = useState(null);  // State to manage success/error messages
-  const navigate = useNavigate();  // Use navigate for redirection
+  }
+);
+  const [orderSuccess, setOrderSuccess] = useState(null); // For success/error messages
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
-        const productId = orderData.items[0].product;
-        const response = await axios.get(`https://modestserver.onrender.com/api/products/${productId}`);
-        const productData = response.data;
-
-        productData.price = Number(productData.price.$numberDecimal);
-        productData.discount = Number(productData.discount.$numberDecimal);
-
-        setProductDetails(productData);
+        const productDetailsArray = [];
+        for (const item of orderData.items) {
+          const productId = item.product;
+          const response = await axios.get(`https://modestserver.onrender.com/api/products/${productId}`);
+          const productData = response.data;
+  
+          productData.price = Number(productData.price.$numberDecimal); // Convert decimal to number
+          productData.discount = Number(productData.discount.$numberDecimal); // Convert discount if present
+          productDetailsArray.push(productData);
+        }
+  
+        setProductDetails(productDetailsArray); // Set all product details
         setLoading(false);
       } catch (err) {
         setError("Failed to load product details.");
         setLoading(false);
       }
     };
-
+  
     if (orderData.items.length > 0) {
       fetchProductDetails();
     }
@@ -49,7 +51,8 @@ const CheckoutView = () => {
 
   const calculateTotal = () => {
     return orderData.items.reduce(
-      (total, item) => total + item.price * item.quantity, 0
+      (total, item) => total + (productDetails?.find(pd => pd._id === item.product)?.price || 0) * item.quantity,
+      0
     ).toFixed(2);
   };
 
@@ -69,122 +72,81 @@ const CheckoutView = () => {
     }));
   };
 
-
-  // const handlePlaceOrder = async () => {
-
-  //   const orderSummary = {
-  //     user: {
-  //       id: user.user._id,
-  //       email: contactInfo.email,
-  //       phone: contactInfo.phone,
-  //       name: shippingInfo.name,
-  //     },
-  //     shippingInfo: {
-  //       address: shippingInfo.address,
-  //       city: shippingInfo.city,
-  //     },
-  //     items: orderData.items.map(item => ({
-  //       product: item.product,
-  //       quantity: item.quantity,
-  //       price: productDetails?.price,
-  //     })),
-  //     total_price: calculateTotal(),
-  //     status: 'pending',
-  //   };
-
-  //   try {
-  //     const response = await axios.post('https://modestserver.onrender.com/api/orders', orderSummary);
-
-  //     if (response.status === 201) {
-  //       console.log("Order placed successfully:", response.data);
-  //       setOrderSuccess('Order placed successfully!');  // Set success message
-  //       setTimeout(() => {
-  //         // Redirect to order confirmation or dashboard after a few seconds
-  //         navigate('/invoice');  // Redirect to /invoice route
-  //       }, 2000); // Redirect after 2 seconds for a smoother experience
-  //     } else {
-  //       console.log("Failed to place order:", response.data);
-  //       setOrderSuccess('Failed to place the order. Please try again.');  // Set error message
-  //     }
-  //   } catch (error) {
-  //     console.error("Error placing order:", error.message);
-  //     setOrderSuccess('Error placing order. Please try again.');  // Set error message
-  //   }
-  // };
   const handlePlaceOrder = async () => {
+    // Validate address and city fields
+    if (!shippingInfo.address.trim()) {
+      setOrderSuccess("Address is required. Please fill in the address.");
+      return;
+    }
+    if (!shippingInfo.city.trim()) {
+      setOrderSuccess("City is required. Please fill in the city.");
+      return;
+    }
+
     const orderSummary = {
       user: {
-        id: user.user._id,
+        id: user?._id,
         email: contactInfo.email,
         phone: contactInfo.phone,
-        name: shippingInfo.name,
       },
       shippingInfo: {
+        name: shippingInfo.name,
         address: shippingInfo.address,
         city: shippingInfo.city,
       },
-      items: orderData.items.map(item => ({
+      items: orderData.items.map((item, index) => ({
         product: item.product,
         quantity: item.quantity,
-        price: productDetails?.price,
+        price: productDetails[index]?.price || 0,
       })),
-      total_price: calculateTotal(),
-      status: 'pending',
+      total_price: parseFloat(calculateTotal()),
+      status: "pending", // Ensure this matches the backend expected status
     };
-  
+    
+    console.log(orderSummary)
     try {
       // Step 1: Register the order
-      const orderResponse = await axios.post('https://modestserver.onrender.com/api/orders', orderSummary);
-  
+      const orderResponse = await axios.post(`https://modestserver.onrender.com/api/orders`, orderSummary);
+
       if (orderResponse.status === 201) {
         console.log("Order registered successfully:", orderResponse.data);
-        const orderId = orderResponse.data.id; // Get the order ID from the response
-      const {order} = orderResponse.data
+        const { order } = orderResponse.data;
+
         // Step 2: Proceed to payment
-        const paymentResponse = await axios.post('https://modestserver.onrender.com/api/pay', { orderSummary });
-  
+        const paymentResponse = await axios.post(`https://modestserver.onrender.com/api/pay`, { orderSummary });
+
         if (paymentResponse.status === 200) {
           const checkoutUrl = paymentResponse.data.checkout_url;
           window.location.href = checkoutUrl; // Redirect to the payment gateway
-  
-          // After payment verification
-          setOrderSuccess('Order placed and payment verified successfully!');
+
+          setOrderSuccess("Order placed and payment verified successfully!");
           const updatedOrderSummary = {
             ...orderSummary,
             invoice_number: order.invoice_number,
           };
-       
-  
-          localStorage.removeItem('cart');
-          localStorage.setItem("invoice", JSON.stringify(updatedOrderSummary ));
-          // Ensure that the navigation to the invoice page works
-          // console.log("Navigating to Invoice page...");
-          // navigate("/invoice", { state: orderData }); 
-          // // Immediate navigation
-          // navigate("/invoice", { state: orderSummary });
 
-          // localStorage.removeItem('cart');
-  
+          localStorage.removeItem("cart");
+          localStorage.setItem("invoice", JSON.stringify(updatedOrderSummary));
         } else {
           console.log("Payment verification failed:", paymentResponse.data);
-          setOrderSuccess('Payment verification failed. Please try again.');
+          setOrderSuccess("Payment verification failed. Please try again.");
         }
       } else {
         console.log("Order registration failed:", orderResponse.data);
-        setOrderSuccess('Failed to register order. Please try again.');
+        setOrderSuccess("Failed to register order. Please try again.");
       }
     } catch (error) {
       console.error("Error during process:", error.message);
-      setOrderSuccess('An error occurred. Please try again.');
+      setOrderSuccess("An error occurred. Please try again.");
     }
   };
-  
+
   return (
     <div>
       <div className="bg-secondary border-top p-4 text-white mb-3">
         <h1 className="display-6">Checkout</h1>
       </div>
-      {orderSuccess && <div className="alert">{orderSuccess}</div>}
+      {orderSuccess && <div className="alert alert-danger">{orderSuccess}</div>}
 
       <div className="container mb-3">
         <div className="row">
@@ -238,9 +200,13 @@ const CheckoutView = () => {
                     />
                   </div>
                   <div className="col-md-6">
+                    <label htmlFor="address" className="form-label">
+                      Address <span className="text-danger">*</span>
+                    </label>
                     <input
                       type="text"
                       name="address"
+                      id="address"
                       value={shippingInfo.address}
                       className="form-control"
                       placeholder="Address"
@@ -249,9 +215,13 @@ const CheckoutView = () => {
                     />
                   </div>
                   <div className="col-md-6">
+                    <label htmlFor="city" className="form-label">
+                      City <span className="text-danger">*</span>
+                    </label>
                     <input
                       type="text"
                       name="city"
+                      id="city"
                       value={shippingInfo.city}
                       className="form-control"
                       placeholder="City"
@@ -289,12 +259,12 @@ const CheckoutView = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {orderData.items.map((item, index) => (
+                      {productDetails && productDetails.length > 0 && orderData.items.map((item, index) => (
                         <tr key={index}>
-                          <td>{productDetails?.name}</td>
-                          <td>${productDetails?.price.toFixed(2)}</td>
+                          <td>{productDetails[index]?.name}</td>
+                          <td>${productDetails[index]?.price.toFixed(2)}</td>
                           <td>{item.quantity}</td>
-                          <td>${(productDetails?.price * item.quantity).toFixed(2)}</td>
+                          <td>${(productDetails[index]?.price * item.quantity).toFixed(2)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -319,7 +289,9 @@ const CheckoutView = () => {
               )}
             </div>
             <div className="card-footer bg-light text-end">
-              <button className="btn btn-primary w-100 py-2" onClick={handlePlaceOrder}>Place Order</button>
+              <button className="btn btn-primary w-100 py-2" onClick={handlePlaceOrder}>
+                Place Order
+              </button>
             </div>
           </div>
         </div>

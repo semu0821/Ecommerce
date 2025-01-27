@@ -1,12 +1,39 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
-const FilterColor = ({ selectedColors, onColorFilterChange }) => {
+const FilterColor = ({ onColorFilterChange }) => {
+  const [colors, setColors] = useState([]);
+  const [error, setError] = useState(null);
+    const [selectedColors, setSelectedColors] = useState([]);
+
+  // Fetch colors from the backend
+  useEffect(() => {
+    const fetchColors = async () => {
+      try {
+        const response = await axios.get(
+          `https://modestserver.onrender.com/api/colorsize/colors`
+        );
+        if (Array.isArray(response.data)) {
+          setColors(response.data);
+        } else {
+          setError("Failed to load colors. Unexpected data format.");
+        }
+      } catch (err) {
+        setError("Failed to load colors. Please try again.");
+      }
+    };
+
+    fetchColors();
+  }, []);
+
   // Handle checkbox change
-  const handleColorChange = (color, checked) => {
+  const handleColorChange = (colorName, checked) => {
     const updatedColors = checked
-      ? [...selectedColors, color]
-      : selectedColors.filter(c => c !== color);
-    onColorFilterChange(updatedColors); // Pass the selected colors to the parent component
+      ? [...selectedColors, colorName]
+      : selectedColors.filter((c) => c !== colorName);
+    onColorFilterChange(updatedColors);
+    setSelectedColors(updatedColors);
+
   };
 
   return (
@@ -20,122 +47,46 @@ const FilterColor = ({ selectedColors, onColorFilterChange }) => {
       >
         Color
       </div>
-      <ul className="list-group list-group-flush show" id="filterColor">
-        <li className="list-group-item">
-          <div className="row g-0">
-            <div className="form-check col">
-              <input
-                className="form-check-input bg-primary"
-                type="checkbox"
-                id="flexCheckColor1"
-                checked={selectedColors.includes('blue')}
-                onChange={(e) => handleColorChange('blue', e.target.checked)}
-              />
-              <label className="form-check-label" htmlFor="flexCheckColor1">
-                Blue <span className="text-muted">(5)</span>
-              </label>
-            </div>
+      {error ? (
+        <div className="text-danger p-3">{error}</div>
+      ) : (
+        <ul className="list-group list-group-flush show" id="filterColor">
+          {colors.length === 0 && (
+            <li className="list-group-item text-muted">No colors available</li>
+          )}
+          {colors.map(({ name, _id }) => {
+            if (!name || typeof name !== "string" || name.trim() === "") {
+              return null;
+            }
 
-            <div className="form-check col">
-              <input
-                className="form-check-input bg-secondary"
-                type="checkbox"
-                id="flexCheckColor2"
-                checked={selectedColors.includes('gray')}
-                onChange={(e) => handleColorChange('gray', e.target.checked)}
-              />
-              <label className="form-check-label" htmlFor="flexCheckColor2">
-                Gray <span className="text-muted">(8)</span>
-              </label>
-            </div>
-          </div>
-        </li>
-        <li className="list-group-item">
-          <div className="row g-0">
-            <div className="form-check col">
-              <input
-                className="form-check-input bg-success"
-                type="checkbox"
-                id="flexCheckColor3"
-                checked={selectedColors.includes('green')}
-                onChange={(e) => handleColorChange('green', e.target.checked)}
-              />
-              <label className="form-check-label" htmlFor="flexCheckColor3">
-                Green <span className="text-muted">(12)</span>
-              </label>
-            </div>
+            const sanitizedName = name.toLowerCase().replace(/\s+/g, "-");
 
-            <div className="form-check col">
-              <input
-                className="form-check-input bg-danger"
-                type="checkbox"
-                id="flexCheckColor4"
-                checked={selectedColors.includes('red')}
-                onChange={(e) => handleColorChange('red', e.target.checked)}
-              />
-              <label className="form-check-label" htmlFor="flexCheckColor4">
-                Red <span className="text-muted">(15)</span>
-              </label>
-            </div>
-          </div>
-        </li>
-        <li className="list-group-item">
-          <div className="row g-0">
-            <div className="form-check col">
-              <input
-                className="form-check-input bg-warning"
-                type="checkbox"
-                id="flexCheckColor5"
-                checked={selectedColors.includes('yellow')}
-                onChange={(e) => handleColorChange('yellow', e.target.checked)}
-              />
-              <label className="form-check-label" htmlFor="flexCheckColor5">
-                Yellow <span className="text-muted">(6)</span>
-              </label>
-            </div>
-            <div className="form-check col">
-              <input
-                className="form-check-input bg-info"
-                type="checkbox"
-                id="flexCheckColor6"
-                checked={selectedColors.includes('cyan blue')}
-                onChange={(e) => handleColorChange('cyan blue', e.target.checked)}
-              />
-              <label className="form-check-label" htmlFor="flexCheckColor6">
-                Cyan Blue <span className="text-muted">(2)</span>
-              </label>
-            </div>
-          </div>
-        </li>
-        <li className="list-group-item">
-          <div className="row g-0">
-            <div className="form-check col">
-              <input
-                className="form-check-input bg-light"
-                type="checkbox"
-                id="flexCheckColor7"
-                checked={selectedColors.includes('light')}
-                onChange={(e) => handleColorChange('light', e.target.checked)}
-              />
-              <label className="form-check-label" htmlFor="flexCheckColor7">
-                Light <span className="text-muted">(3)</span>
-              </label>
-            </div>
-            <div className="form-check col">
-              <input
-                className="form-check-input bg-dark"
-                type="checkbox"
-                id="flexCheckColor8"
-                checked={selectedColors.includes('dark')}
-                onChange={(e) => handleColorChange('dark', e.target.checked)}
-              />
-              <label className="form-check-label" htmlFor="flexCheckColor8">
-                Dark <span className="text-muted">(7)</span>
-              </label>
-            </div>
-          </div>
-        </li>
-      </ul>
+            return (
+              <li className="list-group-item" key={_id}>
+                <div className="row g-0">
+                  <div className="form-check col">
+                    <input
+                      className={`form-check-input bg-${sanitizedName}`}
+                      type="checkbox"
+                      id={`flexCheckColor-${sanitizedName}`}
+                      checked={selectedColors.includes(name)}
+                      onChange={(e) =>
+                        handleColorChange(name, e.target.checked)
+                      }
+                    />
+                    <label
+                      className="form-check-label"
+                      htmlFor={`flexCheckColor-${sanitizedName}`}
+                    >
+                      {name.charAt(0).toUpperCase() + name.slice(1)}
+                    </label>
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 };

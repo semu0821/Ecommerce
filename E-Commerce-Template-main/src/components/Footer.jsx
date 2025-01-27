@@ -13,7 +13,7 @@ const Footer = () => {
         <div className="col-md-9 py-3 text-white">
           {/* This section can be left empty or customized further */}
         </div>
-        <div className="col-md-3 py-3 text-center text-dark">
+        {/* <div className="col-md-3 py-3 text-center text-dark">
           <Link to="/" title="Apple">
             <i className="bi bi-apple text-dark me-3"></i>
           </Link>
@@ -36,7 +36,7 @@ const Footer = () => {
           <Link to="/" title="Youtube">
             <i className="bi bi-youtube text-dark me-3"></i>
           </Link>
-        </div>
+        </div> */}
       </div>
 
       {/* Footer Content Section with different background */}
@@ -60,7 +60,7 @@ const Footer = () => {
           </div>
 
           {/* Products Section */}
-          <div className="col-md-3 py-3">
+          {/* <div className="col-md-3 py-3">
             <div className="h6">Products</div>
             <hr />
             <ul className="list-group list-group-flush">
@@ -74,26 +74,12 @@ const Footer = () => {
                   Home Accessories
                 </Link>
               </li>
-              <li className="list-group-item bg-dark text-white border-dark">
-                <Link to="/" className="text-decoration-none text-white stretched-link">
-                  Home Materials
-                </Link>
-              </li>
-              <li className="list-group-item bg-dark text-white border-dark">
-                <Link to="/" className="text-decoration-none text-white stretched-link">
-                  Car Accessories
-                </Link>
-              </li>
-              <li className="list-group-item bg-dark text-white border-dark">
-                <Link to="/" className="text-decoration-none text-white stretched-link">
-                  Travel Cards
-                </Link>
-              </li>
+             
             </ul>
-          </div>
+          </div> */}
 
           {/* Policy Section */}
-          <div className="col-md-3 py-3">
+          {/* <div className="col-md-3 py-3">
             <div className="h6">Policy</div>
             <hr />
             <ul className="list-group list-group-flush">
@@ -123,7 +109,7 @@ const Footer = () => {
                 </Link>
               </li>
             </ul>
-          </div>
+          </div> */}
 
           {/* Address and Customer Care Section */}
           {/* <div className="col-md-3 py-3">

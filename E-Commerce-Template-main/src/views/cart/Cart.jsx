@@ -1,28 +1,37 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { AuthContext } from "../../contexts/AuthContext";
 
 const CartView = () => {
+  const { user } = useContext(AuthContext);
   const [cart, setCart] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Fetch cart data from localStorage and set it in the state
-    const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
-    setCart(storedCart);
-    setIsLoading(false);
-  }, []);
+    if (!user) {
+      navigate("/account/signin", { replace: true });
+    } else {
+      const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
+      console.log(storedCart)
+      setCart(storedCart);
+      setIsLoading(false);
+    }
+  }, [user, navigate]);
 
-  const updateQuantity = (index, quantity) => {
-    const updatedCart = [...cart];
-    const validQuantity = Number.isNaN(quantity) ? 1 : Math.max(1, quantity);
-    updatedCart[index].quantity = validQuantity;
+  const updateQuantity = (itemId, newQuantity) => {
+    const updatedCart = cart.map((item) =>
+      item._id === itemId
+        ? { ...item, quantity: Math.max(1, newQuantity) }
+        : item
+    );
+    console.log(updatedCart)
     setCart(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
   };
 
-  const removeItem = (index) => {
-    const updatedCart = cart.filter((_, i) => i !== index);
+  const removeItem = (itemId) => {
+    const updatedCart = cart.filter((item) => item._id !== itemId);
     setCart(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
   };
@@ -34,14 +43,17 @@ const CartView = () => {
   };
 
   const prepareOrderData = () => {
+    
     return {
-      user: "", // Replace with user ID or relevant user data
+      user: user._id, // Assuming user ID is available in the `user` object
       total_price: calculateTotal(),
       status: "Pending",
       items: cart.map((item) => ({
         product: item._id,
         quantity: item.quantity,
         price: parseFloat(item.price.$numberDecimal),
+        color: item.selectedColor?.name || null,
+        size: item.selectedSize || null,
       })),
     };
   };
@@ -82,17 +94,17 @@ const CartView = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {cart.map((item, index) => (
+                    {cart.map((item) => (
                       <tr key={item._id}>
                         <td>
                           <div className="row">
                             <div className="col-3 d-none d-md-block">
-                              <img src={item.image_url} width="80" alt={item.name} />
+                              <img src={item.image} width="80" alt={item.name} />
                             </div>
                             <div className="col">
-                              <Link to={`/product/detail/${item._id}`} className="text-decoration-none">
-                                {item.name}
-                              </Link>
+                              <span className="text-decoration-none">{item.name}</span>
+                              {item.selectedColor && <p><strong>Color:</strong> {item.selectedColor.name }</p>}
+                              {item.selectedSize && <p><strong>Size:</strong> {item.selectedSize}</p>}
                             </div>
                           </div>
                         </td>
@@ -101,7 +113,7 @@ const CartView = () => {
                             <button
                               className="btn btn-primary text-white"
                               type="button"
-                              onClick={() => updateQuantity(index, item.quantity - 1)}
+                              onClick={() => updateQuantity(item._id, item.quantity - 1)}
                             >
                               <i className="bi bi-dash-lg"></i>
                             </button>
@@ -114,7 +126,7 @@ const CartView = () => {
                             <button
                               className="btn btn-primary text-white"
                               type="button"
-                              onClick={() => updateQuantity(index, item.quantity + 1)}
+                              onClick={() => updateQuantity(item._id, item.quantity + 1)}
                             >
                               <i className="bi bi-plus-lg"></i>
                             </button>
@@ -131,7 +143,7 @@ const CartView = () => {
                         <td className="text-end">
                           <button
                             className="btn btn-sm btn-outline-danger"
-                            onClick={() => removeItem(index)}
+                            onClick={() => removeItem(item._id)}
                           >
                             <i className="bi bi-trash"></i>
                           </button>
@@ -143,13 +155,13 @@ const CartView = () => {
               </div>
               <div className="card-footer">
                 <Link
-                  to="/checkout"
-                  state={prepareOrderData()}  // Pass the cart data directly to the checkout component
+                  to={user ? "/checkout" : "/account/signin"}
+                  state={prepareOrderData()}
                   className="btn btn-primary float-end"
                 >
                   Make Purchase <i className="bi bi-chevron-right"></i>
                 </Link>
-                <Link to="../category/accessories" className="btn btn-secondary">
+                <Link to="../category/products" className="btn btn-secondary">
                   <i className="bi bi-chevron-left"></i> Continue shopping
                 </Link>
               </div>

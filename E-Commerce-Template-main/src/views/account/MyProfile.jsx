@@ -1,86 +1,198 @@
-import { lazy, Component } from "react";
-const ProfileForm = lazy(() => import("../../components/account/ProfileForm"));
-const ChangePasswordForm = lazy(() =>
-  import("../../components/account/ChangePasswordForm")
-);
-const SettingForm = lazy(() => import("../../components/account/SettingForm"));
-const CardListForm = lazy(() =>
-  import("../../components/account/CardListForm")
-);
+import React, { useState, useEffect, useContext } from "react";
+import axios from "axios";
+import { AuthContext } from "../../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { FaUser } from "react-icons/fa";
 
-class MyProfileView extends Component {
-  state = {
-    imagePreview: "",
-  };
+const MyProfileView = () => {
+  const { user, setUser } = useContext(AuthContext);
+  const [profileData, setProfileData] = useState({
+    phone_number: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [passwordError, setPasswordError] = useState(null);
+  const navigate = useNavigate();
 
-  onSubmitProfile = async (values) => {
-    // Handle profile form submission
-    console.log("Profile Updated:", values);
-  };
-
-  onSubmitChangePassword = async (values) => {
-    // Handle password change
-    console.log("Password Changed:", values);
-  };
-
-  onImageChange = async (file) => {
-    if (file) {
-      const base64Image = await this.getBase64(file);
-      this.setState({ imagePreview: base64Image });
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        phone_number: user.phone_number || "",
+        password: "",
+        confirmPassword: "",
+      });
     } else {
-      this.setState({ imagePreview: "" });
+      navigate("/login");
+    }
+  }, [user, navigate]);
+
+  const handleProfileUpdate = async () => {
+    setError(null);
+    setPasswordError(null);
+
+    // Validate password match
+    if (profileData.password && profileData.password !== profileData.confirmPassword) {
+      setPasswordError("Passwords do not match.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Prepare data for the update
+      const updateData = {
+        phone_number: profileData.phone_number,
+      };
+      if (profileData.password) {
+        updateData.password = profileData.password;
+      }
+
+      // Make API call to update user
+      const response = await axios.put(
+        `https://modestserver.onrender.com/api/user/${user._id}`,
+        updateData
+      );
+
+      // Update local user state
+      setUser((prev) => ({
+        ...prev,
+        phone_number: profileData.phone_number,
+      }));
+
+      setProfileData({
+        ...profileData,
+        password: "",
+        confirmPassword: "",
+      });
+
+      alert("Profile updated successfully!");
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.message || "An error occurred while updating your profile.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  getBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-      reader.readAsDataURL(file);
-    });
-  };
+  return (
+    <motion.div
+      className="container my-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <h3>Your Profile</h3>
+      {error && <div className="alert alert-danger">{error}</div>}
 
-  render() {
-    return (
-      <div className="container my-4">
-        <h3 className="mb-4 text-center">My Profile</h3>
-        <div className="row g-4">
-          {/* Profile Section */}
-          <div className="col-lg-4">
-            <div className="card">
-              {/* <div className="card-header bg-primary text-white text-center">
-                <h5>Profile Information</h5>
-              </div> */}
-              <div className="card-body">
-                <ProfileForm
-                  onSubmit={this.onSubmitProfile}
-                  onImageChange={this.onImageChange}
-                  imagePreview={this.state.imagePreview}
-                />
-              </div>
-            </div>
+      <motion.div
+        className="card mb-4 mx-auto"
+        style={{ maxWidth: "500px", padding: "1rem" }}
+        whileHover={{ scale: 1.05 }}
+        transition={{ type: "spring", stiffness: 300 }}
+      >
+        <div className="card-body text-center">
+          {/* Human Icon */}
+          <FaUser size={50} className="mb-3 text-primary" />
+          <h5 className="card-title">Profile Information</h5>
+          <div className="mb-3">
+            <label htmlFor="name" className="form-label">
+              Name
+            </label>
+            <input
+              type="text"
+              className="form-control"
+              id="name"
+              value={user.name}
+              disabled
+            />
           </div>
-
-          {/* Password and Settings Section */}
-          <div className="col-lg-8">
-            <div className="card mb-4">
-              <div className="card-header bg-success text-white text-center">
-                <h5>Change Password</h5>
-              </div>
-              <div className="card-body">
-                <ChangePasswordForm onSubmit={this.onSubmitChangePassword} />
-              </div>
-            </div>
-
-          
-
-           
+          <div className="mb-3">
+            <label htmlFor="email" className="form-label">
+              Email
+            </label>
+            <input
+              type="email"
+              className="form-control"
+              id="email"
+              value={user.email}
+              disabled
+            />
+          </div>
+          <div className="mb-3">
+            <label htmlFor="phone_number" className="form-label">
+              Phone Number
+            </label>
+            <input
+              type="tel"
+              className="form-control"
+              id="phone_number"
+              value={profileData.phone_number}
+              onChange={(e) =>
+                setProfileData({ ...profileData, phone_number: e.target.value })
+              }
+            />
+          </div>
+          <div className="mb-3">
+            <label htmlFor="password" className="form-label">
+              New Password
+            </label>
+            <input
+              type="password"
+              className="form-control"
+              id="password"
+              value={profileData.password}
+              onChange={(e) =>
+                setProfileData({ ...profileData, password: e.target.value })
+              }
+            />
+          </div>
+          <div className="mb-3">
+            <label htmlFor="confirmPassword" className="form-label">
+              Confirm New Password
+            </label>
+            <input
+              type="password"
+              className="form-control"
+              id="confirmPassword"
+              value={profileData.confirmPassword}
+              onChange={(e) =>
+                setProfileData({
+                  ...profileData,
+                  confirmPassword: e.target.value,
+                })
+              }
+            />
+          </div>
+          {passwordError && (
+            <div className="alert alert-danger">{passwordError}</div>
+          )}
+          <div className="d-flex justify-content-end gap-3">
+            <motion.button
+              className="btn btn-primary"
+              onClick={handleProfileUpdate}
+              disabled={loading}
+              whileHover={{ scale: 1.1 }}
+              transition={{ duration: 0.2 }}
+            >
+              {loading ? "Updating..." : "Update Profile"}
+            </motion.button>
+            <motion.button
+              className="btn btn-secondary"
+              onClick={() => navigate(-1)}
+              whileHover={{ scale: 1.1 }}
+              transition={{ duration: 0.2 }}
+            >
+              Back
+            </motion.button>
           </div>
         </div>
-      </div>
-    );
-  }
-}
+      </motion.div>
+    </motion.div>
+  );
+};
 
 export default MyProfileView;

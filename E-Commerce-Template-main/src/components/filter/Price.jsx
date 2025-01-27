@@ -4,9 +4,10 @@ const FilterPrice = ({ onChange }) => {
   const [selectedRanges, setSelectedRanges] = useState([]);
 
   const priceRanges = [
-    { label: "$24.00 - $29.00", range: [24, 29], count: 4 },
-    { label: "$33.00 - $35.00", range: [33, 35], count: 2 },
-    { label: "$70.00 - $99.00", range: [70, 99], count: 5 },
+    { label: "< $100.00", range: [0, 100] },
+    { label: "$100.00 - $500.00", range: [101, 500] },
+    { label: "$501.00 - $2000.00", range: [501, 2000] },
+    { label: ">$2000.00", range: [2000.01, Infinity]},
   ];
 
   const handleCheckboxChange = (range) => {
@@ -49,7 +50,8 @@ const FilterPrice = ({ onChange }) => {
                 onChange={() => handleCheckboxChange(range)}
               />
               <label className="form-check-label" htmlFor={`flexCheckDefault${index + 1}`}>
-                {label} <span className="text-muted">({count})</span>
+                {label} 
+                {/* <span className="text-muted">({count})</span> */}
               </label>
             </div>
           </li>
