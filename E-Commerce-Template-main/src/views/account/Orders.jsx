@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../../contexts/AuthContext";
 
@@ -11,13 +12,13 @@ const OrdersView = () => {
   const [orderItems, setOrderItems] = useState([]); // State to store order items
   const [loadingItems, setLoadingItems] = useState(false); // Loading state for items
   const { user } = useContext(AuthContext);
-
+console.log(user)
   useEffect(() => {
     // Fetch orders from the API
     const fetchOrders = async () => {
       try {
         const response = await fetch(
-          `https://modestserver.onrender.com/api/orders/user/${user?.user._id}`
+          `https://modestserver.onrender.com/api/orders/user/${user?._id}`
         );
         const data = await response.json();
         const sortedOrders = data.sort((a, b) =>
@@ -62,6 +63,7 @@ const OrdersView = () => {
 
 
   const fetchOrderItems = async (order) => {
+    console.log("order")
     try {
       setLoadingItems(true);
       const items = await Promise.all(
@@ -69,6 +71,7 @@ const OrdersView = () => {
           const response = await fetch(
             `https://modestserver.onrender.com/api/products/${item.product}`
           );
+
           const productData = await response.json();
           return { ...item, productData };
         })
@@ -119,9 +122,9 @@ const OrdersView = () => {
             >
               <option value="all">All Statuses</option>
               <option value="pending">Pending</option>
-              <option value="processing">Processing</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="shipped">Shipped</option>
+              <option value="delivered">Delivered</option>
+          
             </select>
           </div>
         </div>

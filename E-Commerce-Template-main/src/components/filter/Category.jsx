@@ -1,51 +1,85 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 
-const Category = ({ onChange, categoryId }) => {
-  const [categories, setCategories] = useState([]);
+const Category = ({ onChange }) => {
+  const [mainCategories, setMainCategories] = useState([]);
+  const [subCategories, setSubCategories] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch categories from your server
+  // Fetch main categories and subcategories from the server
   useEffect(() => {
     const fetchCategories = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        const response = await axios.get(
-          `https://modestserver.onrender.com/api/categories/main/${categoryId}`
-        );
-        setCategories(response.data);
-        setLoading(false);
+        const [mainResponse, subResponse] = await Promise.all([
+          axios.get("https://modestserver.onrender.com/api/categories/main"),
+          axios.get("https://modestserver.onrender.com/api/categories/subcategory"),
+        ]);
+        setMainCategories(mainResponse.data);
+        setSubCategories(subResponse.data);
       } catch (err) {
         console.error("Error fetching categories: ", err);
-        setError("Failed to load categories");
+        setError("Failed to load categories. Please try again.");
+      } finally {
         setLoading(false);
       }
     };
 
     fetchCategories();
-  }, [categoryId]);
+  }, []);
 
-  // Filter categories based on search term
-  const filteredCategories = categories.filter((category) =>
-    category.name.toLowerCase().includes(searchTerm.toLowerCase())
+  // Filter main categories based on search term
+  const filteredMainCategories = useMemo(
+    () =>
+      mainCategories.filter((category) =>
+        category.name.toLowerCase().includes(searchTerm.toLowerCase())
+      ),
+    [mainCategories, searchTerm]
   );
 
+  // Group subcategories by their main category
+  const groupedSubCategories = useMemo(() => {
+    return mainCategories.reduce((acc, mainCategory) => {
+      acc[mainCategory._id] = subCategories.filter(
+        (subCategory) => subCategory.main_category._id === mainCategory._id
+      );
+      return acc;
+    }, {});
+  }, [mainCategories, subCategories]);
+
   // Handle checkbox selection
-  const handleCheckboxChange = (category) => {
-    const isSelected = selectedCategories.includes(category);
+  const handleCheckboxChange = (subCategoryName) => {
+    setSelectedCategories((prevSelected) => {
+      const isSelected = prevSelected.includes(subCategoryName);
+      const updatedSelection = isSelected
+        ? prevSelected.filter((name) => name !== subCategoryName)
+        : [...prevSelected, subCategoryName];
 
-    const newSelectedCategories = isSelected
-      ? selectedCategories.filter((selected) => selected !== category)
-      : [...selectedCategories, category];
+      onChange(updatedSelection); // Pass selected categories to the parent
+      return updatedSelection;
+    });
+  };
 
-    setSelectedCategories(newSelectedCategories);
-    onChange(newSelectedCategories); // Pass selected categories to the parent
+  // Handle clearing all selected categories
+  const handleClearSelection = () => {
+    setSelectedCategories([]);
+    onChange([]); // Notify parent that the selection is cleared
   };
 
   if (loading) return <div>Loading categories...</div>;
-  if (error) return <div>{error}</div>;
+  if (error)
+    return (
+      <div>
+        {error}
+        <button className="btn btn-link" onClick={() => window.location.reload()}>
+          Retry
+        </button>
+      </div>
+    );
 
   return (
     <div className="card mb-3 accordion">
@@ -63,33 +97,41 @@ const Category = ({ onChange, categoryId }) => {
         <input
           type="text"
           className="form-control mb-3"
-          placeholder="Search subcategories..."
+          placeholder="Search categories or subcategories..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
-      <ul
-        className="list-group list-group-flush collapse show"
-        id="filterCategory"
-      >
-        {filteredCategories.length > 0 ? (
-          filteredCategories.map((category) => (
-            <li key={category.id} className="list-group-item">
-              <div className="form-check">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id={`categoryCheckbox${category.id}`}
-                  checked={selectedCategories.includes(category.name)}
-                  onChange={() => handleCheckboxChange(category.name)}
-                />
-                <label
-                  className="form-check-label"
-                  htmlFor={`categoryCheckbox${category.id}`}
-                >
-                  {category.name}
-                </label>
-              </div>
+      <ul className="list-group list-group-flush collapse show" id="filterCategory">
+        {filteredMainCategories.length > 0 ? (
+          filteredMainCategories.map((mainCategory) => (
+            <li key={mainCategory._id} className="list-group-item">
+              <div className="fw-bold">{mainCategory.name}</div>
+              <ul className="list-group">
+                {groupedSubCategories[mainCategory._id]?.length > 0 ? (
+                  groupedSubCategories[mainCategory._id].map((subCategory) => (
+                    <li key={subCategory._id} className="list-group-item">
+                      <div className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id={`subcategoryCheckbox-${subCategory._id}`}
+                          checked={selectedCategories.includes(subCategory.name)}
+                          onChange={() => handleCheckboxChange(subCategory.name)}
+                        />
+                        <label
+                          className="form-check-label"
+                          htmlFor={`subcategoryCheckbox-${subCategory._id}`}
+                        >
+                          {subCategory.name}
+                        </label>
+                      </div>
+                    </li>
+                  ))
+                ) : (
+                  <li className="list-group-item">No subcategories available</li>
+                )}
+              </ul>
             </li>
           ))
         ) : (

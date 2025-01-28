@@ -4,14 +4,13 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.js";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import TopMenu from "./components/TopMenu";
-// import Header from './components/Header';
 import Footer from "./components/Footer";
-import { AuthProvider } from "./contexts/AuthContext"; // Import AuthProvider
-import { SearchProvider } from "./contexts/SearchContext"; // Import SearchProvider
+import { AuthProvider } from "./contexts/AuthContext";
+import { SearchProvider } from "./contexts/SearchContext";
 import "./App.min.css";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import ResetPassword from "./views/account/ResetPassword";
 
 // Lazy-loaded components
 const HomeView = lazy(() => import("./views/Home"));
@@ -39,14 +38,14 @@ const BlogDetailView = lazy(() => import("./views/blog/Detail"));
 function App() {
   return (
     <AuthProvider>
-      <SearchProvider> {/* Wrap SearchProvider around your app */}
+      <SearchProvider>
         <BrowserRouter>
           <React.Fragment>
-            {/* <Header /> */}
             <TopMenu />
             <Suspense fallback={<div className="text-white text-center mt-3">Loading...</div>}>
               <Routes>
-                <Route exact path="/" element={<HomeView />} />
+                {/* Set ProductListView as the default page */}
+                <Route exact path="/" element={<ProductListView />} />
                 <Route exact path="/account/signin" element={<SignInView />} />
                 <Route exact path="/account/signup" element={<SignUpView />} />
                 <Route exact path="/account/forgotpassword" element={<ForgotPasswordView />} />
@@ -55,11 +54,11 @@ function App() {
                 <Route exact path="/account/wishlist" element={<WishlistView />} />
                 <Route exact path="/account/notification" element={<NotificationView />} />
                 <Route exact path="/category/products" element={<ProductListView />} />
-                {/* <Route exact path="/category/accessories" element={<ProductListView />} /> */}
                 <Route exact path="/product/:productId" element={<ProductDetailView />} />
                 <Route exact path="/star/zone" element={<StarZoneView />} />
                 <Route exact path="/cart" element={<CartView />} />
                 <Route exact path="/checkout" element={<CheckoutView />} />
+                <Route exact path="/reset-password" element={<ResetPassword />} />
                 <Route exact path="/invoice" element={<InvoiceView />} />
                 <Route exact path="/documentation" element={<DocumentationView />} />
                 <Route exact path="/contact-us" element={<ContactUsView />} />

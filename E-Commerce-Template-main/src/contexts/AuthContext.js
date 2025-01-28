@@ -1,4 +1,3 @@
-// src/contexts/AuthContext.js
 import React, { createContext, useState, useEffect } from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
@@ -8,29 +7,37 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null); // Store user information
-  const [loading, setLoading] = useState(false); // Loading state for requests
+  const [loading, setLoading] = useState(true); // Initially set loading to true while checking localStorage
 
   // Check if a user is already logged in on component mount
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
-      setUser(JSON.parse(storedUser)); // Set user from localStorage if it exists
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser); // Set user from localStorage if it exists
+      } catch (err) {
+        console.error("Error parsing user data from localStorage:", err);
+        setUser(null); // Reset if there's an error parsing
+      }
     }
-  }, []);
+    setLoading(false); // Stop loading after checking
+  }, []); // Empty dependency array to run only once on mount
 
   // Login function
   const login = async (email, password) => {
     try {
       setLoading(true);
       const response = await axios.post("https://modestserver.onrender.com/api/user/login", { email, password });
-      const userData = response.data; // Assuming server returns user data
-      setUser(userData);
-      localStorage.setItem("user", JSON.stringify(userData)); // Save user in local storage
-
+      const userData = response.data.user; // Extract user from the response
+  
+      setUser(userData);  // Set only the user data, not the full response
+      localStorage.setItem("user", JSON.stringify(userData));  // Save only the user data in localStorage
+  
       // Display success message
       toast.success("User logged in successfully!", {
         position: "top-left",
-        autoClose: 5000, // Closes automatically after 3 seconds
+        autoClose: 5000,
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
@@ -45,7 +52,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
-
+  
   // Signup function
   const signup = async (formData) => {
     try {
@@ -69,7 +76,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, loading,setUser }}>
       {children}
     </AuthContext.Provider>
   );

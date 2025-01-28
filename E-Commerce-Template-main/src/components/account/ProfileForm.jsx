@@ -69,4 +69,8 @@ const MyProfileView = () => {
   );
 };
 
+<<<<<<< HEAD
 export default MyProfileView;
+=======
+export default MyProfileView;
+>>>>>>> 0e2f004f233a9da2f4bcb22b5fa2fb7833b3a189

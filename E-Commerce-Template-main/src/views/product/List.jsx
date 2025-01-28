@@ -1,35 +1,29 @@
-import React, { useState, useEffect, lazy, useContext } from "react";
+import React, { useState, useEffect, lazy } from "react";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
-import { SearchContext } from "../../contexts/SearchContext";
+
 
 // Lazy-loaded components
 const Paging = lazy(() => import("../../components/Paging"));
 const FilterCategory = lazy(() => import("../../components/filter/Category"));
 const FilterPrice = lazy(() => import("../../components/filter/Price"));
-const FilterSize = lazy(() => import("../../components/filter/Size"));
-const FilterStar = lazy(() => import("../../components/filter/Star"));
-const FilterColor = lazy(() => import("../../components/filter/Color"));
 const FilterClear = lazy(() => import("../../components/filter/Clear"));
+const FilterSize = lazy(() => import("../../components/filter/Size"));
+const FilterColor = lazy(() => import("../../components/filter/Color"));
 const CardProductGrid = lazy(() => import("../../components/card/CardProductGrid"));
 const CardProductList = lazy(() => import("../../components/card/CardProductList"));
 
 const ProductListView = () => {
   const location = useLocation(); // Access the passed data
-  const { categoryName, categoryId } = location.state || {}; 
-  console.log(categoryName)
-  console.log(categoryId)
-  // Destructure the state
+  const { categoryName, categoryId } = location.state || {};
 
   const [products, setProducts] = useState([]);
   const [currentProducts, setCurrentProducts] = useState([]);
   const [currentPage, setCurrentPage] = useState(null);
-  const [totalPages, setTotalPages] = useState(null);
   const [totalItems, setTotalItems] = useState(0);
   const [view, setView] = useState("list");
   const [priceFilter, setPriceFilter] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedRating, setSelectedRating] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState([]);
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [selectedColors, setSelectedColors] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -54,7 +48,7 @@ const ProductListView = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [searchTerm, selectedCategory, priceFilter, selectedRating, selectedSizes, selectedColors]);
+  }, [searchTerm, selectedCategory, priceFilter, selectedSizes, selectedColors]);
 
   const formatPrice = (price) => {
     if (price && price.$numberDecimal) {
@@ -85,9 +79,13 @@ const ProductListView = () => {
     setCurrentProducts(filteredProducts.slice(0, 9)); // Initial display
     setCurrentPage(1);
   };
-
   const getFilteredProducts = () => {
     let filteredProducts = [...products];
+
+   
+  
+  
+
 
     if (priceFilter.length > 0) {
       filteredProducts = filteredProducts.filter((product) =>
@@ -100,13 +98,8 @@ const ProductListView = () => {
     }
 
     if (selectedCategory.length > 0) {
-      console.log(filteredProducts);
       filteredProducts = filteredProducts.filter((product) => {
         const category = product.category;
-        console.log(category);
-        console.log(selectedCategory);
-    
-        // Ensure category and category.name are defined
         return (
           category &&
           typeof category.name === 'string' &&
@@ -117,30 +110,32 @@ const ProductListView = () => {
         );
       });
     }
-    
-    
-    
 
-    if (selectedRating) {
-      filteredProducts = filteredProducts.filter(
-        (product) => product.star >= selectedRating
-      );
-    }
+ 
 
     if (selectedSizes.length > 0) {
+      console.log(filteredProducts)
       filteredProducts = filteredProducts.filter((product) =>
-        selectedSizes.includes(product.size)
+        Array.isArray(product.size) &&
+        product.size.some((sizeObj) => selectedSizes.includes(sizeObj.name))
       );
     }
+    
+    
 
-    if (selectedColors.length > 0) {
+   if (selectedColors.length > 0) {
+    console.log(filteredProducts)
+    console.log(selectedColors)
       filteredProducts = filteredProducts.filter((product) =>
-        selectedColors.includes(product.color.toLowerCase())
+        Array.isArray(product.color) &&
+        product.color.some((colorObj) => selectedColors.includes(colorObj.name))
       );
-    }
+   }
+  
+  
 
-    return filteredProducts;
-  };
+  return filteredProducts;
+};
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -149,6 +144,17 @@ const ProductListView = () => {
   const handleViewChange = (viewType) => {
     setView(viewType);
   };
+
+  // Clear all filters
+  const handleClearFilters = () => {
+    
+    setSearchTerm(""); // Clear the search term
+    setSelectedCategory([]); // Clear selected categories
+    setPriceFilter([]); // Clear price filter
+    setSelectedSizes([]); // Clear selected sizes
+    setSelectedColors([]); // Clear selected colors
+  };
+  
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
@@ -182,32 +188,28 @@ const ProductListView = () => {
       <div className="container-fluid mb-3">
         <div className="row">
           {/* Sidebar Filters */}
-          <div className="col-md-3">
-          <FilterCategory onChange={(category) => setSelectedCategory(category)} 
-  
-  categoryName={categoryName}  // Pass categoryName as prop to Category
-  categoryId={categoryId}      // Pass categoryId as prop to Category
-/>
-
-
-            <FilterPrice onChange={(priceRange) => setPriceFilter(priceRange)} />
-            <FilterStar onRatingFilterChange={(rating) => setSelectedRating(rating)} />
-            <FilterSize onSizeFilterChange={(sizes) => setSelectedSizes(sizes)} />
+          <div className="col-md-3" style={{ marginTop: "30px" }}>
+            <FilterCategory 
+              onChange={(category) => setSelectedCategory(category)} 
+              selectedCategory={selectedCategory} 
+              categoryName={categoryName}  
+              categoryId={categoryId}      
+            />
+               <FilterSize onSizeFilterChange={(sizes) => setSelectedSizes(sizes)} />
             <FilterColor
-              selectedColors={selectedColors}
+             
               onColorFilterChange={(colors) => setSelectedColors(colors)}
             />
-            <FilterClear onClearFilters={() => {
-              setPriceFilter([]);
-              setSelectedCategory("");
-              setSelectedRating(null);
-              setSelectedSizes([]);
-              setSelectedColors([]);
-            }} />
+
+            <FilterPrice 
+              onChange={(priceRange) => setPriceFilter(priceRange)} 
+              priceFilter={priceFilter} 
+            />
+<FilterClear onClearFilters={handleClearFilters} />
           </div>
 
           {/* Main Product List */}
-          <div className="col-md-9">
+          <div className="col-md-9" style={{ marginTop: "30px" }}>
             {/* Search Bar and Controls */}
             <div className="row align-items-center mb-3">
               <div className="col-md-6">
@@ -219,15 +221,7 @@ const ProductListView = () => {
                   onChange={handleSearchChange}
                 />
               </div>
-              <div className="col-md-4 d-flex justify-content-end">
-                <select className="form-select">
-                  <option value={1}>Most Popular</option>
-                  <option value={2}>Latest items</option>
-                  <option value={3}>Trending</option>
-                  <option value={4}>Price low to high</option>
-                  <option value={5}>Price high to low</option>
-                </select>
-              </div>
+
               <div className="col-md-2 d-flex justify-content-end">
                 <div className="btn-group" role="group">
                   <button

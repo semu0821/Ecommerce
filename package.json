@@ -4,6 +4,7 @@
     "bootstrap": "^5.3.3",
     "font-awesome": "^4.7.0",
     "framer-motion": "^11.15.0",
+    "mdb-react-ui-kit": "^9.0.0",
     "react-helmet": "^6.1.0",
     "react-toastify": "^11.0.2"
   }
