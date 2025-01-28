@@ -123,27 +123,39 @@ const CardProductList = (props) => {
                 <span className="fw-bold">Colors:</span>
                 <div className="d-flex flex-wrap">
                   {product.color.map((color, idx) => (
-                    <label key={idx} className="me-3 d-flex align-items-center">
-                      {/* Radio button for selecting color */}
-                      <input
-                        type="radio"
-                        name={`color-${product._id}`}
-                        value={color}
-                        checked={selectedColor === color}
-                        onChange={() => setSelectedColor(color)}
-                        className="me-2"
-                      />
-                      <div
-                        className="color-box"
-                        style={{
-                          width: "20px",
-                          height: "20px",
-                          backgroundColor: color,
-                          border: "1px solid #ccc",
-                          borderRadius: "50%",
-                        }}
-                      ></div>
-                    </label>
+                     <div key={idx} className="form-check">
+                     <input
+                       type="radio"
+                       className="form-check-input"
+                       id={`color-${idx}`}
+                       name="color"
+                       value={color.name}
+                       checked={selectedColor === color.name}
+                       onChange={() => setSelectedColor(color.name)}
+                       
+                     />
+                     <label
+                       className="form-check-label"
+                       htmlFor={`color-${idx}`}
+                       style={{
+                         display: "inline-flex",
+                         alignItems: "center",
+                         gap: "10px",
+                       }}
+                     >
+                       <span
+                         style={{
+                           width: "24px",
+                           height: "24px",
+                           borderRadius: "50%",
+                           backgroundColor: color.name,
+                           display: "inline-block",
+                           border: "1px solid #ddd",
+                         }}
+                       ></span>
+                       {color.name}
+                     </label>
+                   </div>
                   ))}
                 </div>
               </div>
